@@ -1,5 +1,7 @@
 # Binaries
 # Go build artifacts
+.env
+.aider*
 bin/
 build/
 *.exe
@@ -47,3 +49,4 @@ dist/
 
 # Windows Application Icon/Resource
 *.syso
+.aider*
