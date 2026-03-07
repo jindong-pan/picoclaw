@@ -97,12 +97,12 @@ https://private-user-images.githubusercontent.com/83055338/547056448-e7b031ff-d6
 
 ### コンパイル済みバイナリでインストール
 
-[リリースページ](https://github.com/sipeed/picoclaw/releases) からお使いのプラットフォーム用のファームウェアをダウンロードしてください。
+[リリースページ](https://github.com/jindong-pan/picoclaw/releases) からお使いのプラットフォーム用のファームウェアをダウンロードしてください。
 
 ### ソースからインストール（最新機能、開発向け推奨）
 
 ```bash
-git clone https://github.com/sipeed/picoclaw.git
+git clone https://github.com/jindong-pan/picoclaw.git
 
 cd picoclaw
 make deps
@@ -123,7 +123,7 @@ Docker Compose を使えば、ローカルにインストールせずに PicoCla
 
 ```bash
 # 1. リポジトリをクローン
-git clone https://github.com/sipeed/picoclaw.git
+git clone https://github.com/jindong-pan/picoclaw.git
 cd picoclaw
 
 # 2. 初回起動 — docker/data/config.json を自動生成して終了

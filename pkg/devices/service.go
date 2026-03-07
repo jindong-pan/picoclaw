@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/constants"
-	"github.com/sipeed/picoclaw/pkg/devices/events"
-	"github.com/sipeed/picoclaw/pkg/devices/sources"
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/state"
+	"github.com/jindong-pan/picoclaw/pkg/bus"
+	"github.com/jindong-pan/picoclaw/pkg/constants"
+	"github.com/jindong-pan/picoclaw/pkg/devices/events"
+	"github.com/jindong-pan/picoclaw/pkg/devices/sources"
+	"github.com/jindong-pan/picoclaw/pkg/logger"
+	"github.com/jindong-pan/picoclaw/pkg/state"
 )
 
 type Service struct {

@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/sipeed/picoclaw/pkg/auth"
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/jindong-pan/picoclaw/pkg/auth"
+	"github.com/jindong-pan/picoclaw/pkg/config"
 )
 
 // ── Model identification helpers ─────────────────────────────────

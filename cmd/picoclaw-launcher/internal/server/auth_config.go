@@ -4,8 +4,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/sipeed/picoclaw/pkg/auth"
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/jindong-pan/picoclaw/pkg/auth"
+	"github.com/jindong-pan/picoclaw/pkg/config"
 )
 
 // updateConfigAfterLogin updates config.json after a successful provider login.

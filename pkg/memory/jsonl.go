@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/fileutil"
-	"github.com/sipeed/picoclaw/pkg/providers"
+	"github.com/jindong-pan/picoclaw/pkg/fileutil"
+	"github.com/jindong-pan/picoclaw/pkg/providers"
 )
 
 const (

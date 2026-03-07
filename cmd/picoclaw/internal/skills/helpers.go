@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/skills"
-	"github.com/sipeed/picoclaw/pkg/utils"
+	"github.com/jindong-pan/picoclaw/cmd/picoclaw/internal"
+	"github.com/jindong-pan/picoclaw/pkg/config"
+	"github.com/jindong-pan/picoclaw/pkg/skills"
+	"github.com/jindong-pan/picoclaw/pkg/utils"
 )
 
 const skillsSearchMaxResults = 20

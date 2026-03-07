@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/auth"
-	"github.com/sipeed/picoclaw/pkg/providers"
+	"github.com/jindong-pan/picoclaw/pkg/auth"
+	"github.com/jindong-pan/picoclaw/pkg/providers"
 )
 
 // oauthSession stores in-flight OAuth state for browser-based flows.

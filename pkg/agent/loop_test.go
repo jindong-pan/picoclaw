@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/channels"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/media"
-	"github.com/sipeed/picoclaw/pkg/providers"
-	"github.com/sipeed/picoclaw/pkg/tools"
+	"github.com/jindong-pan/picoclaw/pkg/bus"
+	"github.com/jindong-pan/picoclaw/pkg/channels"
+	"github.com/jindong-pan/picoclaw/pkg/config"
+	"github.com/jindong-pan/picoclaw/pkg/media"
+	"github.com/jindong-pan/picoclaw/pkg/providers"
+	"github.com/jindong-pan/picoclaw/pkg/tools"
 )
 
 type fakeChannel struct{ id string }

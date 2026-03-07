@@ -113,7 +113,7 @@ Give your decade-old phone a second life! Turn it into a smart AI Assistant with
 
 ```bash
 # Note: Replace v0.1.1 with the latest version from the Releases page
-wget https://github.com/sipeed/picoclaw/releases/download/v0.1.1/picoclaw-linux-arm64
+wget https://github.com/jindong-pan/picoclaw/releases/download/v0.1.1/picoclaw-linux-arm64
 chmod +x picoclaw-linux-arm64
 pkg install proot
 termux-chroot ./picoclaw-linux-arm64 onboard
@@ -138,12 +138,12 @@ PicoClaw can be deployed on almost any Linux device!
 
 ### Install with precompiled binary
 
-Download the firmware for your platform from the [release](https://github.com/sipeed/picoclaw/releases) page.
+Download the firmware for your platform from the [release](https://github.com/jindong-pan/picoclaw/releases) page.
 
 ### Install from source (latest features, recommended for development)
 
 ```bash
-git clone https://github.com/sipeed/picoclaw.git
+git clone https://github.com/jindong-pan/picoclaw.git
 
 cd picoclaw
 make deps
@@ -169,7 +169,7 @@ You can also run PicoClaw using Docker Compose without installing anything local
 
 ```bash
 # 1. Clone this repo
-git clone https://github.com/sipeed/picoclaw.git
+git clone https://github.com/jindong-pan/picoclaw.git
 cd picoclaw
 
 # 2. First run — auto-generates docker/data/config.json then exits
@@ -1282,7 +1282,7 @@ Jobs are stored in `~/.picoclaw/workspace/cron/` and processed automatically.
 
 PRs welcome! The codebase is intentionally small and readable. 🤗
 
-See our full [Community Roadmap](https://github.com/sipeed/picoclaw/blob/main/ROADMAP.md).
+See our full [Community Roadmap](https://github.com/jindong-pan/picoclaw/blob/main/ROADMAP.md).
 
 Developer group building, join after your first merged PR!
 

@@ -162,19 +162,19 @@ pkg/identity/
 package channels
 
 import (
-    "github.com/sipeed/picoclaw/pkg/bus"
-    "github.com/sipeed/picoclaw/pkg/config"
+    "github.com/jindong-pan/picoclaw/pkg/bus"
+    "github.com/jindong-pan/picoclaw/pkg/config"
 )
 
 // 新代码（重构分支）
 package telegram
 
 import (
-    "github.com/sipeed/picoclaw/pkg/bus"
-    "github.com/sipeed/picoclaw/pkg/channels"     // 引用父包
-    "github.com/sipeed/picoclaw/pkg/config"
-    "github.com/sipeed/picoclaw/pkg/identity"      // 新增
-    "github.com/sipeed/picoclaw/pkg/media"          // 新增（如需媒体）
+    "github.com/jindong-pan/picoclaw/pkg/bus"
+    "github.com/jindong-pan/picoclaw/pkg/channels"     // 引用父包
+    "github.com/jindong-pan/picoclaw/pkg/config"
+    "github.com/jindong-pan/picoclaw/pkg/identity"      // 新增
+    "github.com/jindong-pan/picoclaw/pkg/media"          // 新增（如需媒体）
 )
 ```
 
@@ -321,9 +321,9 @@ c.HandleMessage(ctx, peer, messageID, senderID, chatID, content, mediaRefs, meta
 package telegram
 
 import (
-    "github.com/sipeed/picoclaw/pkg/bus"
-    "github.com/sipeed/picoclaw/pkg/channels"
-    "github.com/sipeed/picoclaw/pkg/config"
+    "github.com/jindong-pan/picoclaw/pkg/bus"
+    "github.com/jindong-pan/picoclaw/pkg/channels"
+    "github.com/jindong-pan/picoclaw/pkg/config"
 )
 
 func init() {
@@ -338,9 +338,9 @@ func init() {
 ```go
 // cmd/picoclaw/internal/gateway/helpers.go
 import (
-    _ "github.com/sipeed/picoclaw/pkg/channels/telegram"   // 触发 init() 注册
-    _ "github.com/sipeed/picoclaw/pkg/channels/discord"
-    _ "github.com/sipeed/picoclaw/pkg/channels/your_new_channel"  // 新增
+    _ "github.com/jindong-pan/picoclaw/pkg/channels/telegram"   // 触发 init() 注册
+    _ "github.com/jindong-pan/picoclaw/pkg/channels/discord"
+    _ "github.com/jindong-pan/picoclaw/pkg/channels/your_new_channel"  // 新增
 )
 ```
 
@@ -421,9 +421,9 @@ Agent Loop 的主要变化：
 package matrix
 
 import (
-    "github.com/sipeed/picoclaw/pkg/bus"
-    "github.com/sipeed/picoclaw/pkg/channels"
-    "github.com/sipeed/picoclaw/pkg/config"
+    "github.com/jindong-pan/picoclaw/pkg/bus"
+    "github.com/jindong-pan/picoclaw/pkg/channels"
+    "github.com/jindong-pan/picoclaw/pkg/config"
 )
 
 func init() {
@@ -442,11 +442,11 @@ import (
     "context"
     "fmt"
 
-    "github.com/sipeed/picoclaw/pkg/bus"
-    "github.com/sipeed/picoclaw/pkg/channels"
-    "github.com/sipeed/picoclaw/pkg/config"
-    "github.com/sipeed/picoclaw/pkg/identity"
-    "github.com/sipeed/picoclaw/pkg/logger"
+    "github.com/jindong-pan/picoclaw/pkg/bus"
+    "github.com/jindong-pan/picoclaw/pkg/channels"
+    "github.com/jindong-pan/picoclaw/pkg/config"
+    "github.com/jindong-pan/picoclaw/pkg/identity"
+    "github.com/jindong-pan/picoclaw/pkg/logger"
 )
 
 // MatrixChannel implements channels.Channel for the Matrix protocol.
@@ -811,7 +811,7 @@ if m.config.Channels.Matrix.Enabled && m.config.Channels.Matrix.Token != "" {
 ```go
 // cmd/picoclaw/internal/gateway/helpers.go
 import (
-    _ "github.com/sipeed/picoclaw/pkg/channels/matrix"
+    _ "github.com/jindong-pan/picoclaw/pkg/channels/matrix"
 )
 ```
 

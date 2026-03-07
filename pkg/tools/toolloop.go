@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/providers"
-	"github.com/sipeed/picoclaw/pkg/utils"
+	"github.com/jindong-pan/picoclaw/pkg/logger"
+	"github.com/jindong-pan/picoclaw/pkg/providers"
+	"github.com/jindong-pan/picoclaw/pkg/utils"
 )
 
 // ToolLoopConfig configures the tool execution loop.

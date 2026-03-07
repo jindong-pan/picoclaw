@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/auth"
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/jindong-pan/picoclaw/pkg/auth"
+	"github.com/jindong-pan/picoclaw/pkg/config"
 )
 
 const DefaultPort = "18800"

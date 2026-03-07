@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/jindong-pan/picoclaw/pkg/bus"
+	"github.com/jindong-pan/picoclaw/pkg/config"
 )
 
 // generateTestAESKeyApp generates a valid test AES key for WeCom App

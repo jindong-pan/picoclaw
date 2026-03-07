@@ -24,7 +24,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/sipeed/picoclaw/cmd/picoclaw-launcher/internal/server"
+	"github.com/jindong-pan/picoclaw/cmd/picoclaw-launcher/internal/server"
 )
 
 //go:embed internal/ui/index.html

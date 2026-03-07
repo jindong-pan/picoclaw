@@ -20,7 +20,7 @@ go install github.com/go-delve/delve/cmd/dlv@latest
 To trace `picoclaw -m "echo hello"`, you want to "debug" the execution of the main package while passing those specific flags. Run this from the root of your `picoclaw` folder:
 
 ```bash
-dlv debug ./cmd/picoclaw -- -m "echo hello"
+dlv debug ./cmd/picoclaw -- agent -m "echo hello"
 
 ```
 
@@ -51,10 +51,69 @@ Try setting a breakpoint where the command-line flags are processed or where the
 
 ```text
 (dlv) funcs pkg/agent  # This lists functions related to the agent logic
-(dlv) break pkg/agent.(*Agent).Run  # Common pattern in Go for the main execution loop
-(dlv) continue
+```
+
+### 1. The Correct Way to Set the Breakpoint
+
+Use the exact string Delve gave you in the `funcs` output. You can actually copy-paste the whole thing:
+
+```text
+(dlv) b github.com/jindong-pan/picoclaw/pkg/agent.(*AgentLoop).Run
 
 ```
+
+**Pro-Tip:** Delve can often find it with just the last part if it's unique. Try this shorter version:
+
+```text
+(dlv) b (*AgentLoop).Run
+
+```
+
+---
+
+### 2. Strategic Breakpoints for your Redesign
+
+Since you want to understand the **design** to eventually redo it, don't just stop at `Run`. You need to see where the "Thinking" turns into "Doing."
+
+I recommend setting these three breakpoints:
+
+1. **`b (*AgentLoop).ProcessDirect`**: This is where your message `"echo hello"` first enters the agent's logic.
+2. **`b (*AgentLoop).handleCommand`**: This is likely where the AI decides "I need to run a shell command" and picks a tool.
+3. **`b (*AgentLoop).RegisterTool`**: (Optional) If you want to see how the design allows for new tools (like your future Web3 or Security tools) to be added.
+
+---
+
+### 3. Understanding the "AgentLoop" Design
+
+While you're waiting to hit those breakpoints, look at the name **`AgentLoop`**.
+
+In Go, putting a function in parentheses like `(*AgentLoop)` means it's a **Method** attached to that specific struct.
+
+* **The Struct (`AgentLoop`)**: Holds the state (API keys, history, current tools).
+* **The Methods**: These are the "behaviors."
+
+If you were doing this in Python, it would look like this:
+
+```python
+class AgentLoop:
+    def run(self):
+        # logic for github.com/jindong-pan/picoclaw/pkg/agent.(*AgentLoop).Run
+        pass
+
+```
+
+### 4. What to do when you hit the breakpoint
+
+Once you type `c` (continue) and hit the breakpoint:
+
+1. **`ls`**: See the code. Look for where the LLM is called.
+2. **`n`**: Step over lines until you see a variable being assigned the result of the LLM "thought."
+3. **`p <variable>`**: Print that variable to see if the AI has correctly identified that it needs to run `echo hello`.
+
+---
+
+**Next Step:**
+Try setting the breakpoint with `b (*AgentLoop).Run` and hit `c`. Once you hit it, type `ls`. **Would you like me to explain the "Goroutine" info you might see in the output?** (Go handles concurrency differently than Python's `asyncio`, and PicoClaw uses them to keep the agent responsive).
 
 #### Step C: Inspecting Variables (The Python `locals()` equivalent)
 
@@ -76,5 +135,3 @@ Since you're planning a redesign, use `dlv` to answer these Python-to-Go transit
 2. **Interfaces:** Go uses interfaces for its "Providers." If you step into a call and it jumps to a different file (e.g., `pkg/providers/openai.go`), you’ve found the abstraction layer.
 
 ### Next Step
-
-Would you like me to help you identify the specific file and line number in the PicoClaw source where the `-m` flag is parsed so you can set a precise breakpoint?

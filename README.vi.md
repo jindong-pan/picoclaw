@@ -116,12 +116,12 @@ https://private-user-images.githubusercontent.com/83055338/547056448-e7b031ff-d6
 
 ### Cài đặt bằng binary biên dịch sẵn
 
-Tải file binary cho nền tảng của bạn từ [trang Release](https://github.com/sipeed/picoclaw/releases).
+Tải file binary cho nền tảng của bạn từ [trang Release](https://github.com/jindong-pan/picoclaw/releases).
 
 ### Cài đặt từ mã nguồn (có tính năng mới nhất, khuyên dùng cho phát triển)
 
 ```bash
-git clone https://github.com/sipeed/picoclaw.git
+git clone https://github.com/jindong-pan/picoclaw.git
 
 cd picoclaw
 make deps
@@ -142,7 +142,7 @@ Bạn cũng có thể chạy PicoClaw bằng Docker Compose mà không cần cà
 
 ```bash
 # 1. Clone repo
-git clone https://github.com/sipeed/picoclaw.git
+git clone https://github.com/jindong-pan/picoclaw.git
 cd picoclaw
 
 # 2. Lần chạy đầu tiên — tự tạo docker/data/config.json rồi dừng lại
