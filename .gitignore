@@ -14,6 +14,7 @@ build/
 /picoclaw-test
 cmd/**/workspace
 __debug__*
+*.gz
 
 # Picoclaw specific
 
