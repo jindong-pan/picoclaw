@@ -13,6 +13,7 @@ build/
 /picoclaw
 /picoclaw-test
 cmd/**/workspace
+__debug__*
 
 # Picoclaw specific
 
