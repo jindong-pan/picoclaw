@@ -113,14 +113,29 @@ The following skills extend your capabilities. To use a skill, read its SKILL.md
 %s`, skillsSummary))
 	}
 
-	// Memory context
-	memoryContext := cb.memory.GetMemoryContext()
-	if memoryContext != "" {
-		parts = append(parts, "# Memory\n\n"+memoryContext)
-	}
+	//// Memory context
+	//memoryContext := cb.memory.GetMemoryContext()
+	//if memoryContext != "" {
+	//	parts = append(parts, "# Memory\n\n"+memoryContext)
+	//}
 
-	// Join with "---" separator
-	return strings.Join(parts, "\n\n---\n\n")
+	//// Join with "---" separator
+	//return strings.Join(parts, "\n\n---\n\n")
+
+        // Memory context (Truncated to protect CPU)
+        memoryContext := cb.memory.GetMemoryContext()
+        if memoryContext != "" {
+                // Limit memory to roughly 1000 characters (~250 tokens)
+                // This keeps the system prompt lean on older hardware.
+                limit := 1000
+                if len(memoryContext) > limit {
+                    memoryContext = memoryContext[:limit] + "... (truncated)"
+                }
+                parts = append(parts, "# Memory\n\n"+memoryContext)
+        }
+
+        // Join with "---" separator
+        return strings.Join(parts, "\n\n---\n\n")
 }
 
 // BuildSystemPromptWithCache returns the cached system prompt if available
@@ -523,8 +538,15 @@ func (cb *ContextBuilder) BuildMessages(
 	})
 
 	// Add conversation history
-	messages = append(messages, history...)
-
+	//messages = append(messages, history...)
+       // Add conversation history (Truncated for hardware performance)
+	maxHistory := 4
+	truncatedHistory := history
+	if len(history) > maxHistory {
+		// We take the last 4 messages to keep the CPU "Pre-fill" phase short
+		truncatedHistory = history[len(history)-maxHistory:]
+	}
+	messages = append(messages, truncatedHistory...)
 	// Add current user message
 	if strings.TrimSpace(currentMessage) != "" {
 		msg := providers.Message{
@@ -536,6 +558,14 @@ func (cb *ContextBuilder) BuildMessages(
 		}
 		messages = append(messages, msg)
 	}
+// ... (your existing code that appends history and user message) ...
+
+	// Monitor the "Weight" of the request
+	totalChars := 0
+	for _, m := range messages {
+		totalChars += len(m.Content)
+	}
+	fmt.Printf("\n[DEBUG] Total Prompt Weight: %d characters (%d messages)\n", totalChars, len(messages))
 
 	return messages
 }
