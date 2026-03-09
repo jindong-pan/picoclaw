@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"os/exec"
 
 	"github.com/mymmrac/telego"
 
@@ -16,45 +15,6 @@ type TelegramCommander interface {
 	Start(ctx context.Context, message telego.Message) error
 	Show(ctx context.Context, message telego.Message) error
 	List(ctx context.Context, message telego.Message) error
-	Run(ctx context.Context, message telego.Message) error
-}
-
-func (c *cmd) Run(ctx context.Context, message telego.Message) error {
-	args := commandArgs(message.Text)
-	if args == "" {
-		_, err := c.bot.SendMessage(ctx, &telego.SendMessageParams{
-			ChatID: telego.ChatID{ID: message.Chat.ID},
-			Text:   "Usage: /run <command>",
-			ReplyParameters: &telego.ReplyParameters{
-				MessageID: message.MessageID,
-			},
-		})
-		return err
-	}
-
-	// Execute the shell command
-	cmd := exec.Command("sh", "-c", args)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		_, sendErr := c.bot.SendMessage(ctx, &telego.SendMessageParams{
-			ChatID: telego.ChatID{ID: message.Chat.ID},
-			Text:   fmt.Sprintf("Error executing command: %v\nOutput: %s", err, string(output)),
-			ReplyParameters: &telego.ReplyParameters{
-				MessageID: message.MessageID,
-			},
-		})
-		return sendErr
-	}
-
-	// Send the command output back to the user
-	_, sendErr := c.bot.SendMessage(ctx, &telego.SendMessageParams{
-		ChatID: telego.ChatID{ID: message.Chat.ID},
-		Text:   fmt.Sprintf("Command output:\n%s", string(output)),
-		ReplyParameters: &telego.ReplyParameters{
-			MessageID: message.MessageID,
-		},
-	})
-	return sendErr
 }
 
 type cmd struct {
