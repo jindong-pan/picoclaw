@@ -15,6 +15,7 @@ type TelegramCommander interface {
 	Start(ctx context.Context, message telego.Message) error
 	Show(ctx context.Context, message telego.Message) error
 	List(ctx context.Context, message telego.Message) error
+	HandleAsCommand(ctx context.Context, message telego.Message) (bool, error)
 }
 
 type cmd struct {
@@ -51,6 +52,35 @@ func (c *cmd) Help(ctx context.Context, message telego.Message) error {
 		},
 	})
 	return err
+}
+
+func (c *cmd) HandleAsCommand(ctx context.Context, message telego.Message) (bool, error) {
+	if !strings.HasPrefix(message.Text, "/") {
+		return false, nil
+	}
+
+	command := strings.SplitN(message.Text, " ", 2)[0]
+	var err error
+	switch command {
+	case "/start":
+		err = c.Start(ctx, message)
+	case "/help":
+		err = c.Help(ctx, message)
+	case "/show":
+		err = c.Show(ctx, message)
+	case "/list":
+		err = c.List(ctx, message)
+	default:
+		msg := "Unknown command. Type /help for a list of commands."
+		_, err = c.bot.SendMessage(ctx, &telego.SendMessageParams{
+			ChatID: telego.ChatID{ID: message.Chat.ID},
+			Text:   msg,
+			ReplyParameters: &telego.ReplyParameters{
+				MessageID: message.MessageID,
+			},
+		})
+	}
+	return true, err
 }
 
 func (c *cmd) Start(ctx context.Context, message telego.Message) error {
