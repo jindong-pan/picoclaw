@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -1514,9 +1515,24 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 		default:
 			return fmt.Sprintf("Unknown switch target: %s", target), true
 		}
+	case "/run":
+		if len(args) == 0 {
+			return "Usage: /run <command>", true
+		}
+		commandStr := strings.Join(args, " ")
+		cmdExec := exec.Command("sh", "-c", commandStr)
+		output, err := cmdExec.CombinedOutput()
+		if err != nil {
+			return fmt.Sprintf("Error executing command: %v\nOutput: %s", err, string(output)), true
+		}
+		return string(output), true
 	}
 
-	return "", false
+	return "Unknown command. Available commands:\n" +
+		"/show [model|channel|agents]\n" +
+		"/list [models|channels|agents]\n" +
+		"/switch [model|channel] to <name>\n" +
+		"/run <command...>", true
 }
 
 // extractPeer extracts the routing peer from the inbound message's structured Peer field.
