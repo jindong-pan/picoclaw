@@ -17,6 +17,8 @@ type TelegramCommander interface {
 	Show(ctx context.Context, message telego.Message) error
 	List(ctx context.Context, message telego.Message) error
 	Run(ctx context.Context, message telego.Message) error
+}
+
 func (c *cmd) Run(ctx context.Context, message telego.Message) error {
 	args := commandArgs(message.Text)
 	if args == "" {
