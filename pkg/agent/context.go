@@ -17,6 +17,17 @@ import (
 	"github.com/jindong-pan/picoclaw/pkg/skills"
 )
 
+// builtinSkillsDirOnce captures the builtin skills directory at process startup.
+// This must be resolved from os.Getwd() at init time, not lazily, because
+// the working directory may change after the gateway starts (e.g. on /start reload).
+var builtinSkillsDir = func() string {
+	if dir := strings.TrimSpace(os.Getenv("PICOCLAW_BUILTIN_SKILLS")); dir != "" {
+		return dir
+	}
+	wd, _ := os.Getwd()
+	return filepath.Join(wd, "skills")
+}()
+
 type ContextBuilder struct {
 	workspace    string
 	skillsLoader *skills.SkillsLoader
@@ -50,13 +61,6 @@ func getGlobalConfigDir() string {
 }
 
 func NewContextBuilder(workspace string) *ContextBuilder {
-	// builtin skills: skills directory in current project
-	// Use the skills/ directory under the current working directory
-	builtinSkillsDir := strings.TrimSpace(os.Getenv("PICOCLAW_BUILTIN_SKILLS"))
-	if builtinSkillsDir == "" {
-		wd, _ := os.Getwd()
-		builtinSkillsDir = filepath.Join(wd, "skills")
-	}
 	globalSkillsDir := filepath.Join(getGlobalConfigDir(), "skills")
 
 	return &ContextBuilder{
