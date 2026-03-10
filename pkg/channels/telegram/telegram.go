@@ -134,14 +134,6 @@ func (c *TelegramChannel) Start(ctx context.Context) error {
 	}, th.CommandEqual("help"))
 
 	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-		return c.commands.Show(ctx, message)
-	}, th.CommandEqual("show"))
-
-	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-		return c.commands.List(ctx, message)
-	}, th.CommandEqual("list"))
-
-	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
 		return c.handleMessage(ctx, &message)
 	}, th.AnyMessage())
 
@@ -194,14 +186,6 @@ func (c *TelegramChannel) initBotCommands(ctx context.Context) error {
 		{
 			Command:     "help",
 			Description: "Show a help message",
-		},
-		{
-			Command:     "show",
-			Description: "Show current configuration",
-		},
-		{
-			Command:     "list",
-			Description: "List available options",
 		},
 	}
 
