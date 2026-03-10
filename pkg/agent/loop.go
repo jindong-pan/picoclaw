@@ -1469,13 +1469,20 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 		if err != nil {
 			sb.WriteString(fmt.Sprintf("⚠️  Config reload failed: %v\n", err))
 		} else {
-			al.cfg = newCfg
-			// Re-initialize agent registry and tools with the new config.
-			// This is a partial hot-reload. Some components like MCP tools
-			// or state manager directory will not be updated until a full restart.
-			al.registry = NewAgentRegistry(al.cfg, al.provider)
-			registerSharedTools(al.cfg, al.bus, al.registry, al.provider)
-			sb.WriteString(fmt.Sprintf("✅ Config and agents reloaded from %s\n", configPath))
+			// Resolve model ID exactly as startup does
+			newProvider, modelID, err := providers.CreateProvider(newCfg)
+			if err != nil {
+				sb.WriteString(fmt.Sprintf("⚠️  Provider init failed: %v\n", err))
+			} else {
+				if modelID != "" {
+					newCfg.Agents.Defaults.ModelName = modelID
+				}
+				al.cfg = newCfg
+				al.provider = newProvider
+				al.registry = NewAgentRegistry(al.cfg, al.provider)
+				registerSharedTools(al.cfg, al.bus, al.registry, al.provider)
+				sb.WriteString(fmt.Sprintf("✅ Config and agents reloaded from %s\n", configPath))
+			}
 		}
 
 		// Get the default agent *after* potential reload
