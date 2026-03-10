@@ -1532,25 +1532,6 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 
 		return sb.String(), true
 
-	case "/show":
-		if len(args) < 1 {
-			return "Usage: /show [model|channel|agents]", true
-		}
-		switch args[0] {
-		case "model":
-			defaultAgent := al.registry.GetDefaultAgent()
-			if defaultAgent == nil {
-				return "No default agent configured", true
-			}
-			return fmt.Sprintf("Current model: %s", defaultAgent.Model), true
-		case "channel":
-			return fmt.Sprintf("Current channel: %s", msg.Channel), true
-		case "agents":
-			agentIDs := al.registry.ListAgentIDs()
-			return fmt.Sprintf("Registered agents: %s", strings.Join(agentIDs, ", ")), true
-		default:
-			return fmt.Sprintf("Unknown show target: %s", args[0]), true
-		}
 
 	case "/list":
 		if len(args) < 1 {
@@ -1593,33 +1574,6 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 			return fmt.Sprintf("Unknown list target: %s", args[0]), true
 		}
 
-	case "/switch":
-		if len(args) < 3 || args[1] != "to" {
-			return "Usage: /switch [model|channel] to <name>", true
-		}
-		target := args[0]
-		value := args[2]
-
-		switch target {
-		case "model":
-			defaultAgent := al.registry.GetDefaultAgent()
-			if defaultAgent == nil {
-				return "No default agent configured", true
-			}
-			oldModel := defaultAgent.Model
-			defaultAgent.Model = value
-			return fmt.Sprintf("Switched model from %s to %s", oldModel, value), true
-		case "channel":
-			if al.channelManager == nil {
-				return "Channel manager not initialized", true
-			}
-			if _, exists := al.channelManager.GetChannel(value); !exists && value != "cli" {
-				return fmt.Sprintf("Channel '%s' not found or not enabled", value), true
-			}
-			return fmt.Sprintf("Switched target channel to %s", value), true
-		default:
-			return fmt.Sprintf("Unknown switch target: %s", target), true
-		}
 	case "/run":
 		if len(args) == 0 {
 			return "Usage: /run <command>", true
@@ -1634,11 +1588,11 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 	}
 
 	return "Unknown command. Available commands:\n" +
-		"/start\n" +
-		"/show [model|channel|agents]\n" +
-		"/list [models|channels|agents]\n" +
-		"/switch [model|channel] to <name>\n" +
-		"/run <command...>", true
+		"/start               - Restart and clear session\n" +
+		"/status              - Show agent status\n" +
+		"/list models         - List available models\n" +
+		"/switch model <name> - Switch default model and reload\n" +
+		"/run <command...>    - Execute a shell command", true
 }
 
 // extractPeer extracts the routing peer from the inbound message's structured Peer field.
