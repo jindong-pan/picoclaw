@@ -42,7 +42,6 @@ type TelegramChannel struct {
 	*channels.BaseChannel
 	bot      *telego.Bot
 	bh       *th.BotHandler
-	commands TelegramCommander
 	config   *config.Config
 	chatIDs  map[string]int64
 	ctx      context.Context
@@ -93,7 +92,6 @@ func NewTelegramChannel(cfg *config.Config, bus *bus.MessageBus) (*TelegramChann
 
 	return &TelegramChannel{
 		BaseChannel: base,
-		commands:    NewTelegramCommands(bot, cfg),
 		bot:         bot,
 		config:      cfg,
 		chatIDs:     make(map[string]int64),
@@ -176,10 +174,6 @@ func (c *TelegramChannel) initBotCommands(ctx context.Context) error {
 		{
 			Command:     "start",
 			Description: "Restart session and clear memory",
-		},
-		{
-			Command:     "help",
-			Description: "Show a help message",
 		},
 	}
 

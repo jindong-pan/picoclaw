@@ -1445,6 +1445,48 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 	args := parts[1:]
 
 	switch cmd {
+	case "/start":
+		defaultAgent := al.registry.GetDefaultAgent()
+		if defaultAgent == nil {
+			return "No default agent configured", true
+		}
+
+		var sb strings.Builder
+		sb.WriteString("🦞 PicoClaw session restarting...\n\n")
+
+		// 1. Clear current session history
+		route := al.registry.ResolveRoute(routing.RouteInput{
+			Channel:    msg.Channel,
+			AccountID:  msg.Metadata["account_id"],
+			Peer:       extractPeer(msg),
+			ParentPeer: extractParentPeer(msg),
+			GuildID:    msg.Metadata["guild_id"],
+			TeamID:     msg.Metadata["team_id"],
+		})
+		sessionKey := route.SessionKey
+		defaultAgent.Sessions.SetHistory(sessionKey, nil)
+		defaultAgent.Sessions.SetSummary(sessionKey, "")
+		defaultAgent.Sessions.Save(sessionKey)
+		sb.WriteString("✅ Session history cleared\n")
+
+		// 2. Clear long-term memory (MEMORY.md)
+		if defaultAgent.Memory != nil {
+			if err := defaultAgent.Memory.WriteLongTerm(""); err != nil {
+				sb.WriteString(fmt.Sprintf("⚠️  Memory clear failed: %v\n", err))
+			} else {
+				sb.WriteString("✅ Long-term memory cleared\n")
+			}
+		}
+
+		// 3. Status summary
+		sb.WriteString(fmt.Sprintf("\n📊 Status\n"))
+		sb.WriteString(fmt.Sprintf("  Model:     %s\n", defaultAgent.Model))
+		sb.WriteString(fmt.Sprintf("  Channel:   %s\n", msg.Channel))
+		sb.WriteString(fmt.Sprintf("  Workspace: %s\n", defaultAgent.Workspace))
+		sb.WriteString("\nReady. 🦞")
+
+		return sb.String(), true
+
 	case "/show":
 		if len(args) < 1 {
 			return "Usage: /show [model|channel|agents]", true
@@ -1529,6 +1571,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 	}
 
 	return "Unknown command. Available commands:\n" +
+		"/start\n" +
 		"/show [model|channel|agents]\n" +
 		"/list [models|channels|agents]\n" +
 		"/switch [model|channel] to <name>\n" +
