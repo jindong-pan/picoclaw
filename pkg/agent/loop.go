@@ -20,8 +20,6 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/jindong-pan/picoclaw/pkg/memory"
-
 	"github.com/jindong-pan/picoclaw/pkg/bus"
 	"github.com/jindong-pan/picoclaw/pkg/channels"
 	"github.com/jindong-pan/picoclaw/pkg/config"
