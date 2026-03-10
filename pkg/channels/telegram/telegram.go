@@ -126,12 +126,6 @@ func (c *TelegramChannel) Start(ctx context.Context) error {
 	}
 	c.bh = bh
 
-	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-		return c.commands.Start(ctx, message)
-	}, th.CommandEqual("start"))
-	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-		return c.commands.Help(ctx, message)
-	}, th.CommandEqual("help"))
 
 	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
 		return c.handleMessage(ctx, &message)
@@ -181,7 +175,7 @@ func (c *TelegramChannel) initBotCommands(ctx context.Context) error {
 	commands := []telego.BotCommand{
 		{
 			Command:     "start",
-			Description: "Start the bot",
+			Description: "Restart session and clear memory",
 		},
 		{
 			Command:     "help",
