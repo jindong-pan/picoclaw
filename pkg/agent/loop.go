@@ -49,6 +49,7 @@ type AgentLoop struct {
 	channelManager *channels.Manager
 	mediaStore     media.MediaStore
 	transcriber    voice.Transcriber
+	startTime      time.Time
 }
 
 // processOptions configures how a message is processed
@@ -95,6 +96,7 @@ func NewAgentLoop(
 		state:       stateManager,
 		summarizing: sync.Map{},
 		fallback:    fallbackChain,
+		startTime:   time.Now(),
 	}
 }
 
