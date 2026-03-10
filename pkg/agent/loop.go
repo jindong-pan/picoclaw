@@ -1532,6 +1532,92 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 
 		return sb.String(), true
 
+	case "/status":
+		defaultAgent := al.registry.GetDefaultAgent()
+		if defaultAgent == nil {
+			return "No default agent configured.", true
+		}
+
+		var sb strings.Builder
+		sb.WriteString("🦞 PicoClaw Status\n\n")
+
+		// Model
+		modelName := defaultAgent.Model
+		fullModel := ""
+		for _, m := range al.cfg.ModelList {
+			if m.ModelName == modelName || m.Model == modelName {
+				fullModel = m.Model
+				break
+			}
+		}
+		if fullModel != "" {
+			sb.WriteString(fmt.Sprintf("  Model:      %s (%s)\n", modelName, fullModel))
+		} else {
+			sb.WriteString(fmt.Sprintf("  Model:      %s\n", modelName))
+		}
+
+		// Workspace
+		sb.WriteString(fmt.Sprintf("  Workspace:  %s\n", defaultAgent.Workspace))
+
+		// Memory
+		memPath := filepath.Join(defaultAgent.Workspace, "MEMORY.md")
+		stat, err := os.Stat(memPath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				sb.WriteString("  Memory:     0.0KB (MEMORY.md)\n")
+			} else {
+				sb.WriteString(fmt.Sprintf("  Memory:     Error: %v\n", err))
+			}
+		} else {
+			sb.WriteString(fmt.Sprintf("  Memory:     %.1fKB (MEMORY.md)\n", float64(stat.Size())/1024.0))
+		}
+
+		// Session
+		route := al.registry.ResolveRoute(routing.RouteInput{
+			Channel:    msg.Channel,
+			AccountID:  msg.Metadata["account_id"],
+			Peer:       extractPeer(msg),
+			ParentPeer: extractParentPeer(msg),
+			GuildID:    msg.Metadata["guild_id"],
+			TeamID:     msg.Metadata["team_id"],
+		})
+		sb.WriteString(fmt.Sprintf("  Session:    %s\n", route.SessionKey))
+
+		// Channels
+		sb.WriteString("\nChannels (enabled):\n")
+		if al.channelManager != nil && len(al.channelManager.GetEnabledChannels()) > 0 {
+			for _, name := range al.channelManager.GetEnabledChannels() {
+				sb.WriteString(fmt.Sprintf("  ✅ %s\n", name))
+			}
+		} else {
+			sb.WriteString("  No channels enabled.\n")
+		}
+
+		// Tools
+		sb.WriteString("\nTools:\n")
+		if _, ok := defaultAgent.Tools.Get("web-search"); ok {
+			sb.WriteString("  🔍 Web Search\n")
+		}
+		if _, ok := defaultAgent.Tools.Get("spawn"); ok {
+			sb.WriteString("  🤖 Sub-agents (spawn)\n")
+		}
+		sb.WriteString("  🖥  Shell commands (/run)\n")
+
+		// Uptime
+		uptime := time.Since(al.startTime).Round(time.Minute)
+		h := uptime / time.Hour
+		uptime -= h * time.Hour
+		m := uptime / time.Minute
+		var uptimeStr string
+		if h > 0 {
+			uptimeStr = fmt.Sprintf("%dh %dm", h, m)
+		} else {
+			uptimeStr = fmt.Sprintf("%dm", m)
+		}
+		sb.WriteString(fmt.Sprintf("\nUptime: %s", uptimeStr))
+
+		return sb.String(), true
+
 
 	case "/list":
 		if len(args) < 1 {
@@ -1556,7 +1642,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 					sb.WriteString(fmt.Sprintf("    %-20s %s\n", m.ModelName, m.Model))
 				}
 			}
-			sb.WriteString(fmt.Sprintf("\nUse /switch model to <model_name> to change."))
+			sb.WriteString(fmt.Sprintf("\nUse /switch model <model_name> to change."))
 			return sb.String(), true
 		case "channels":
 			if al.channelManager == nil {
@@ -1573,6 +1659,100 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 		default:
 			return fmt.Sprintf("Unknown list target: %s", args[0]), true
 		}
+
+	case "/switch":
+		if len(args) < 2 || args[0] != "model" {
+			return "Usage: /switch model <model_name>", true
+		}
+		modelIdentifier := strings.Join(args[1:], " ")
+
+		// 1. Validate model exists in config.ModelList
+		var targetModelName string
+		modelExists := false
+		for _, m := range al.cfg.ModelList {
+			if m.ModelName == modelIdentifier || m.Model == modelIdentifier {
+				modelExists = true
+				targetModelName = m.ModelName // Use the short name for the config
+				break
+			}
+		}
+		if !modelExists {
+			return fmt.Sprintf("Model '%s' not found in config.json ModelList.", modelIdentifier), true
+		}
+
+		// 2. Get config path
+		var homePath string
+		if picoclawHome := os.Getenv("PICOCLAW_HOME"); picoclawHome != "" {
+			homePath = picoclawHome
+		} else {
+			userHome, _ := os.UserHomeDir()
+			homePath = filepath.Join(userHome, ".picoclaw")
+		}
+		configPath := os.Getenv("PICOCLAW_CONFIG")
+		if configPath == "" {
+			configPath = filepath.Join(homePath, "config.json")
+		}
+
+		// 3. Read, modify, write config.json
+		data, err := os.ReadFile(configPath)
+		if err != nil {
+			return fmt.Sprintf("Error reading config: %v", err), true
+		}
+
+		var cfgMap map[string]interface{}
+		if err := json.Unmarshal(data, &cfgMap); err != nil {
+			return fmt.Sprintf("Error parsing config: %v", err), true
+		}
+
+		agents, ok := cfgMap["agents"].(map[string]interface{})
+		if !ok {
+			agents = make(map[string]interface{})
+			cfgMap["agents"] = agents
+		}
+		defaults, ok := agents["defaults"].(map[string]interface{})
+		if !ok {
+			defaults = make(map[string]interface{})
+			agents["defaults"] = defaults
+		}
+		defaults["model_name"] = targetModelName
+
+		newData, err := json.MarshalIndent(cfgMap, "", "  ")
+		if err != nil {
+			return fmt.Sprintf("Error preparing new config: %v", err), true
+		}
+		if err := os.WriteFile(configPath, newData, 0644); err != nil {
+			return fmt.Sprintf("Error writing config: %v", err), true
+		}
+
+		// 4. Trigger reload (like /start)
+		var sb strings.Builder
+		sb.WriteString(fmt.Sprintf("✅ Switched default model to '%s'.\n\n", targetModelName))
+		sb.WriteString("🦞 Reloading configuration...\n")
+
+		newCfg, err := config.LoadConfig(configPath)
+		if err != nil {
+			sb.WriteString(fmt.Sprintf("⚠️  Config reload failed: %v\n", err))
+			return sb.String(), true
+		}
+		newProvider, modelID, err := providers.CreateProvider(newCfg)
+		if err != nil {
+			sb.WriteString(fmt.Sprintf("⚠️  Provider init failed: %v\n", err))
+			return sb.String(), true
+		}
+		if modelID != "" {
+			newCfg.Agents.Defaults.ModelName = modelID
+		}
+		al.cfg = newCfg
+		al.provider = newProvider
+		al.registry = NewAgentRegistry(al.cfg, al.provider)
+		registerSharedTools(al.cfg, al.bus, al.registry, al.provider)
+
+		sb.WriteString(fmt.Sprintf("✅ Config and agents reloaded from %s\n", configPath))
+		if newDefaultAgent := al.registry.GetDefaultAgent(); newDefaultAgent != nil {
+			sb.WriteString(fmt.Sprintf("Active model is now: %s", newDefaultAgent.Model))
+		}
+
+		return sb.String(), true
 
 	case "/run":
 		if len(args) == 0 {
