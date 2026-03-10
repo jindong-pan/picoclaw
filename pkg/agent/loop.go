@@ -39,6 +39,7 @@ import (
 type AgentLoop struct {
 	bus            *bus.MessageBus
 	cfg            *config.Config
+	provider       providers.LLMProvider
 	registry       *AgentRegistry
 	state          *state.Manager
 	running        atomic.Bool
@@ -88,6 +89,7 @@ func NewAgentLoop(
 	return &AgentLoop{
 		bus:         msgBus,
 		cfg:         cfg,
+		provider:    provider,
 		registry:    registry,
 		state:       stateManager,
 		summarizing: sync.Map{},
@@ -1446,15 +1448,44 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 
 	switch cmd {
 	case "/start":
-		defaultAgent := al.registry.GetDefaultAgent()
-		if defaultAgent == nil {
-			return "No default agent configured", true
+		var sb strings.Builder
+		sb.WriteString("🦞 PicoClaw restarting...\n\n")
+
+		// 1. Reload config — resolve path same way as defaults.go
+		var homePath string
+		if picoclawHome := os.Getenv("PICOCLAW_HOME"); picoclawHome != "" {
+			homePath = picoclawHome
+		} else {
+			userHome, _ := os.UserHomeDir()
+			homePath = filepath.Join(userHome, ".picoclaw")
+		}
+		// Also honour explicit config path override
+		configPath := os.Getenv("PICOCLAW_CONFIG")
+		if configPath == "" {
+			configPath = filepath.Join(homePath, "config.json")
+		}
+		newCfg, err := config.LoadConfig(configPath)
+		if err != nil {
+			sb.WriteString(fmt.Sprintf("⚠️  Config reload failed: %v\n", err))
+		} else {
+			al.cfg = newCfg
+			// Re-initialize agent registry and tools with the new config.
+			// This is a partial hot-reload. Some components like MCP tools
+			// or state manager directory will not be updated until a full restart.
+			al.registry = NewAgentRegistry(al.cfg, al.provider)
+			registerSharedTools(al.cfg, al.bus, al.registry, al.provider)
+			sb.WriteString(fmt.Sprintf("✅ Config and agents reloaded from %s\n", configPath))
 		}
 
-		var sb strings.Builder
-		sb.WriteString("🦞 PicoClaw session restarting...\n\n")
+		// Get the default agent *after* potential reload
+		defaultAgent := al.registry.GetDefaultAgent()
+		if defaultAgent == nil {
+			// Prepend error message if agent is missing after reload.
+			finalMessage := "No default agent configured. Check your reloaded config.\n\n" + sb.String()
+			return finalMessage, true
+		}
 
-		// 1. Clear current session history
+		// 2. Clear current session history using robust routing
 		route := al.registry.ResolveRoute(routing.RouteInput{
 			Channel:    msg.Channel,
 			AccountID:  msg.Metadata["account_id"],
@@ -1469,7 +1500,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 		defaultAgent.Sessions.Save(sessionKey)
 		sb.WriteString("✅ Session history cleared\n")
 
-		// 2. Clear long-term memory (MEMORY.md) and invalidate cache
+		// 3. Clear long-term memory (MEMORY.md) and invalidate cache
 		memStore := NewMemoryStore(defaultAgent.Workspace)
 		if err := memStore.WriteLongTerm(""); err != nil {
 			sb.WriteString(fmt.Sprintf("⚠️  Memory clear failed: %v\n", err))
@@ -1481,11 +1512,12 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 			sb.WriteString("✅ MEMORY.md cleared\n")
 		}
 
-		// 3. Status summary
+		// 4. Status summary
 		sb.WriteString(fmt.Sprintf("\n📊 Status\n"))
 		sb.WriteString(fmt.Sprintf("  Model:     %s\n", defaultAgent.Model))
 		sb.WriteString(fmt.Sprintf("  Channel:   %s\n", msg.Channel))
 		sb.WriteString(fmt.Sprintf("  Workspace: %s\n", defaultAgent.Workspace))
+		sb.WriteString(fmt.Sprintf("  Config:    %s\n", configPath))
 		sb.WriteString("\nReady. 🦞")
 
 		return sb.String(), true
