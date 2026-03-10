@@ -1556,7 +1556,25 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 		}
 		switch args[0] {
 		case "models":
-			return "Available models: configured in config.json per agent", true
+			modelList := al.cfg.ModelList
+			if len(modelList) == 0 {
+				return "No models configured in config.json", true
+			}
+			defaultModelName := ""
+			if da := al.registry.GetDefaultAgent(); da != nil {
+				defaultModelName = da.Model
+			}
+			var sb strings.Builder
+			sb.WriteString("Available models:\n")
+			for _, m := range modelList {
+				if m.ModelName == defaultModelName || m.Model == defaultModelName {
+					sb.WriteString(fmt.Sprintf("  * %-20s %s (active)\n", m.ModelName, m.Model))
+				} else {
+					sb.WriteString(fmt.Sprintf("    %-20s %s\n", m.ModelName, m.Model))
+				}
+			}
+			sb.WriteString(fmt.Sprintf("\nUse /switch model to <model_name> to change."))
+			return sb.String(), true
 		case "channels":
 			if al.channelManager == nil {
 				return "Channel manager not initialized", true
