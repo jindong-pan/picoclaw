@@ -4,9 +4,9 @@ Information about user goes here.
 
 ## Preferences
 
-- Communication style: (casual/formal)
-- Timezone: (your timezone)
-- Language: (your preferred language)
+- Communication style: casual
+- Timezone: PST
+- Language: Chinese
 
 ## Personal Information
 
@@ -16,6 +16,6 @@ Information about user goes here.
 
 ## Learning Goals
 
-- What the user wants to learn from AI
-- Preferred interaction style
-- Areas of interest
+- What the user wants to learn from AI: Spainish and Japanese
+- Preferred interaction style: Professional
+- Areas of interest: Crypto, WEB3.0, Stocks and ETFs
