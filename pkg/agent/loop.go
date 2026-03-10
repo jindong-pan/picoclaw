@@ -1470,8 +1470,8 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 		sb.WriteString("✅ Session history cleared\n")
 
 		// 2. Clear long-term memory (MEMORY.md)
-		if defaultAgent.ContextBuilder != nil && defaultAgent.ContextBuilder.Memory != nil {
-			if err := defaultAgent.ContextBuilder.Memory.WriteLongTerm(""); err != nil {
+		if defaultAgent.ContextBuilder != nil && defaultAgent.ContextBuilder.Memory() != nil {
+			if err := defaultAgent.ContextBuilder.Memory().WriteLongTerm(""); err != nil {
 				sb.WriteString(fmt.Sprintf("⚠️  Memory clear failed: %v\n", err))
 			} else {
 				sb.WriteString("✅ Long-term memory cleared\n")
