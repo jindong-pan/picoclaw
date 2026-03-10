@@ -1472,7 +1472,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 		sb.WriteString("✅ Session history cleared\n")
 
 		// 2. Clear long-term memory (MEMORY.md) and invalidate cache
-		memStore := memory.NewMemoryStore(defaultAgent.Workspace)
+		memStore := NewMemoryStore(defaultAgent.Workspace)
 		if err := memStore.WriteLongTerm(""); err != nil {
 			sb.WriteString(fmt.Sprintf("⚠️  Memory clear failed: %v\n", err))
 		} else {
