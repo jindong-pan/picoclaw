@@ -1,12 +1,7 @@
 package telegram
 
 import (
-	"context"
 	"strings"
-
-	"github.com/mymmrac/telego"
-
-	"github.com/jindong-pan/picoclaw/pkg/config"
 )
 
 //
