@@ -220,7 +220,6 @@ func (hs *HeartbeatService) executeHeartbeat() {
 // buildPrompt builds the heartbeat prompt from HEARTBEAT.md
 func (hs *HeartbeatService) buildPrompt() string {
 	heartbeatPath := filepath.Join(hs.workspace, "HEARTBEAT.md")
-
 	data, err := os.ReadFile(heartbeatPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -232,18 +231,24 @@ func (hs *HeartbeatService) buildPrompt() string {
 	}
 
 	content := string(data)
-	if len(content) == 0 {
+
+	// Only send tasks below the "---" separator, not the entire file.
+	// This prevents the Examples/Instructions sections from being
+	// interpreted as real tasks by small models.
+	if idx := strings.LastIndex(content, "\n---"); idx != -1 {
+		content = strings.TrimSpace(content[idx+4:])
+	}
+
+	if content == "" {
+		logger.InfoC("heartbeat", "No tasks defined below --- in HEARTBEAT.md")
 		return ""
 	}
 
 	now := time.Now().Format("2006-01-02 15:04:05")
-	return fmt.Sprintf(`# Heartbeat Check
+	return fmt.Sprintf(`Current time: %s
 
-Current time: %s
-
-You are a proactive AI assistant. This is a scheduled heartbeat check.
-Review the following tasks and execute any necessary actions using available skills.
-If there is nothing that requires attention, respond ONLY with: HEARTBEAT_OK
+Execute these scheduled tasks. Use available tools as needed.
+If nothing requires attention, respond ONLY with: HEARTBEAT_OK
 
 %s
 `, now, content)
@@ -253,28 +258,14 @@ If there is nothing that requires attention, respond ONLY with: HEARTBEAT_OK
 func (hs *HeartbeatService) createDefaultHeartbeatTemplate() {
 	heartbeatPath := filepath.Join(hs.workspace, "HEARTBEAT.md")
 
-	defaultContent := `# Heartbeat Check List
-
-This file contains tasks for the heartbeat service to check periodically.
-
-## Examples
-
-- Check for unread messages
-- Review upcoming calendar events
-- Check device status (e.g., MaixCam)
-
-## Instructions
-
-- Execute ALL tasks listed below. Do NOT skip any task.
-- For simple tasks (e.g., report current time), respond directly.
-- For complex tasks that may take time, use the spawn tool to create a subagent.
-- The spawn tool is async - subagent results will be sent to the user automatically.
-- After spawning a subagent, CONTINUE to process remaining tasks.
-- Only respond with HEARTBEAT_OK when ALL tasks are done AND nothing needs attention.
-
+	defaultContent := `# Heartbeat Tasks
+# 
+# Add your tasks below the --- line. Examples:
+#   - Report current time
+#   - Check disk usage
+#
+# Leave empty to disable heartbeat.
 ---
-
-Add your heartbeat tasks below this line:
 `
 
 	if err := fileutil.WriteFileAtomic(heartbeatPath, []byte(defaultContent), 0o644); err != nil {
