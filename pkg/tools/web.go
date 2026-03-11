@@ -718,6 +718,11 @@ func (t *WebFetchTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 		}
 	}
 
+	// Hard cap to prevent runaway token usage regardless of LLM request
+	if maxChars > 2000 {
+		maxChars = 2000
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", urlStr, nil)
 	if err != nil {
 		return ErrorResult(fmt.Sprintf("failed to create request: %v", err))
