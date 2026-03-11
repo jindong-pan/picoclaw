@@ -22,7 +22,7 @@ const (
 	perplexityTimeout = 30 * time.Second // Perplexity (LLM-based, slower)
 	fetchTimeout      = 60 * time.Second // WebFetchTool
 
-	defaultMaxChars = 50000
+	defaultMaxChars = 2000
 	maxRedirects    = 5
 )
 
@@ -583,9 +583,7 @@ func (t *WebSearchTool) Name() string {
 }
 
 func (t *WebSearchTool) Description() string {
-	return "Search the web for current information. " +
-		"ALWAYS use this first before web_fetch to find relevant URLs. " +
-		"Returns titles, URLs, and snippets — use the URLs from results with web_fetch if more detail is needed."
+	return "Search the web for current information. Returns titles, URLs, and snippets."
 }
 
 func (t *WebSearchTool) Parameters() map[string]any {
@@ -673,9 +671,7 @@ func (t *WebFetchTool) Name() string {
 }
 
 func (t *WebFetchTool) Description() string {
-	return "Fetch a single URL and extract readable content. " +
-		"Use web_search first to find the URL, then fetch only the most relevant result. " +
-		"Do NOT fetch multiple URLs — pick the best one from search results."
+	return "Fetch a URL and extract readable content. Use for weather, news, articles, or any web content."
 }
 
 func (t *WebFetchTool) Parameters() map[string]any {
