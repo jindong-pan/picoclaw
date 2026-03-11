@@ -201,13 +201,23 @@ func (sl *SkillsLoader) BuildSkillsSummary() string {
 	for _, s := range allSkills {
 		escapedName := escapeXML(s.Name)
 		escapedDesc := escapeXML(s.Description)
-		escapedPath := escapeXML(s.Path)
 
 		lines = append(lines, fmt.Sprintf("  <skill>"))
 		lines = append(lines, fmt.Sprintf("    <name>%s</name>", escapedName))
 		lines = append(lines, fmt.Sprintf("    <description>%s</description>", escapedDesc))
-		lines = append(lines, fmt.Sprintf("    <location>%s</location>", escapedPath))
-		lines = append(lines, fmt.Sprintf("    <source>%s</source>", s.Source))
+
+		// Embed skill content directly — eliminates read_file iteration
+		// Strip frontmatter, keep only the instructions
+		content, err := os.ReadFile(s.Path)
+		if err == nil {
+			body := sl.stripFrontmatter(string(content))
+			body = strings.TrimSpace(body)
+			if len(body) > 800 {
+				body = body[:800] + "...(truncated)"
+			}
+			lines = append(lines, fmt.Sprintf("    <instructions>%s</instructions>", escapeXML(body)))
+		}
+
 		lines = append(lines, "  </skill>")
 	}
 	lines = append(lines, "</skills>")

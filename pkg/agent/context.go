@@ -111,9 +111,7 @@ func (cb *ContextBuilder) BuildSystemPrompt() string {
 	skillsSummary := cb.skillsLoader.BuildSkillsSummary()
 	if skillsSummary != "" {
 		parts = append(parts, fmt.Sprintf(`# Skills
-
-The following skills extend your capabilities. To use a skill, read its SKILL.md file using the read_file tool.
-
+The following skills extend your capabilities. Use the instructions provided directly.
 %s`, skillsSummary))
 	}
 
