@@ -550,6 +550,24 @@ func (cb *ContextBuilder) BuildMessages(
 		// We take the last 4 messages to keep the CPU "Pre-fill" phase short
 		truncatedHistory = history[len(history)-maxHistory:]
 	}
+	// Detailed token cost breakdown for optimization tracing
+	// Uses estimateTokens heuristic (2.5 chars/token)
+	estTokens := func(s string) int { return len([]rune(s)) * 2 / 5 }
+	historyChars := 0
+	for _, m := range truncatedHistory {
+		historyChars += len([]rune(m.Content))
+	}
+	logger.InfoCF("agent", "Prompt token breakdown",
+		map[string]any{
+			"static_tokens":  estTokens(staticPrompt),
+			"dynamic_tokens": estTokens(dynamicCtx),
+			"summary_tokens": estTokens(summary),
+			"history_msgs":   len(truncatedHistory),
+			"history_tokens": historyChars * 2 / 5,
+			"message_tokens": estTokens(currentMessage),
+			"total_est":      estTokens(fullSystemPrompt) + historyChars*2/5 + estTokens(currentMessage),
+		})
+
 	messages = append(messages, truncatedHistory...)
 	// Add current user message
 	if strings.TrimSpace(currentMessage) != "" {
