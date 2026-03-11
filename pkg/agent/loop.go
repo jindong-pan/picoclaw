@@ -1148,6 +1148,41 @@ func (al *AgentLoop) runLLMIteration(
 				contentForLLM = r.result.Err.Error()
 			}
 
+			// Truncate tool results to reduce token cost. Large results are a common
+			// source of runaway prompt token growth. We use a per-tool cap.
+			const maxToolResultChars = 2500 // default cap ~1000 tokens
+			originalRunes := []rune(contentForLLM)
+			originalLen := len(originalRunes)
+
+			// Allow larger results for tools where full content matters more.
+			switch r.tc.Function.Name {
+			case "read_file", "web_search":
+				// Smaller cap — summaries are often enough.
+				if originalLen > 1500 {
+					contentForLLM = string(originalRunes[:1500]) +
+						fmt.Sprintf("\n...(truncated, %d chars total)", originalLen)
+				}
+			case "web_fetch":
+				// Larger cap — page content needs more context.
+				if originalLen > 5000 {
+					contentForLLM = string(originalRunes[:5000]) +
+						fmt.Sprintf("\n...(truncated, %d chars total)", originalLen)
+				}
+			default:
+				if originalLen > maxToolResultChars {
+					contentForLLM = string(originalRunes[:maxToolResultChars]) +
+						fmt.Sprintf("\n...(truncated, %d chars total)", originalLen)
+				}
+			}
+
+			// Log the final size of the tool result for monitoring.
+			logger.InfoCF("agent", "Tool result",
+				map[string]any{
+					"tool":         r.tc.Function.Name,
+					"result_chars": len([]rune(contentForLLM)),
+					"est_tokens":   len([]rune(contentForLLL)) * 2 / 5,
+				})
+
 			toolResultMsg := providers.Message{
 				Role:       "tool",
 				Content:    contentForLLM,
