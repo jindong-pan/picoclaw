@@ -1180,7 +1180,7 @@ func (al *AgentLoop) runLLMIteration(
 				map[string]any{
 					"tool":         r.tc.Function.Name,
 					"result_chars": len([]rune(contentForLLM)),
-					"est_tokens":   len([]rune(contentForLLL)) * 2 / 5,
+					"est_tokens":   len([]rune(contentForLLM)) * 2 / 5,
 				})
 
 			toolResultMsg := providers.Message{
