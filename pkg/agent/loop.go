@@ -797,6 +797,7 @@ func (al *AgentLoop) runLLMIteration(
 	opts processOptions,
 ) (string, int, error) {
 	iteration := 0
+	var totalPromptTokens, totalCompletionTokens int
 	var finalContent string
 
 	for iteration < agent.MaxIterations {
@@ -974,6 +975,24 @@ func (al *AgentLoop) runLLMIteration(
 				"target_channel": al.targetReasoningChannelID(opts.Channel),
 				"channel":        opts.Channel,
 			})
+
+		// Token usage tracking
+		if response.Usage != nil {
+			totalPromptTokens += response.Usage.PromptTokens
+			totalCompletionTokens += response.Usage.CompletionTokens
+			logger.InfoCF("agent", "Token usage",
+				map[string]any{
+					"agent_id":           agent.ID,
+					"iteration":          iteration,
+					"prompt_tokens":      response.Usage.PromptTokens,
+					"completion_tokens":  response.Usage.CompletionTokens,
+					"total_tokens":       response.Usage.TotalTokens,
+					"session_prompt":     totalPromptTokens,
+					"session_completion": totalCompletionTokens,
+					"session_total":      totalPromptTokens + totalCompletionTokens,
+				})
+		}
+
 		// Check if no tool calls - we're done
 		if len(response.ToolCalls) == 0 {
 			finalContent = response.Content
@@ -1139,6 +1158,17 @@ func (al *AgentLoop) runLLMIteration(
 			// Save tool result message to session
 			agent.Sessions.AddFullMessage(opts.SessionKey, toolResultMsg)
 		}
+	}
+
+	if totalPromptTokens > 0 || totalCompletionTokens > 0 {
+		logger.InfoCF("agent", "Token usage summary",
+			map[string]any{
+				"agent_id":           agent.ID,
+				"iterations":         iteration,
+				"total_prompt":       totalPromptTokens,
+				"total_completion":   totalCompletionTokens,
+				"total_tokens":       totalPromptTokens + totalCompletionTokens,
+			})
 	}
 
 	return finalContent, iteration, nil
