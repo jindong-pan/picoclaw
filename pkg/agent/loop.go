@@ -165,6 +165,15 @@ func registerSharedTools(
 
 		// Propose change tool
 		proposeChangeTool := tools.NewProposeChangeTool(agent.Workspace)
+		proposeChangeTool.SetSendCallback(func(channel, chatID, content string) error {
+			pubCtx, pubCancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer pubCancel()
+			return msgBus.PublishOutbound(pubCtx, bus.OutboundMessage{
+				Channel: channel,
+				ChatID:  chatID,
+				Content: content,
+			})
+		})
 		agent.Tools.Register(proposeChangeTool)
 
 		// Skill discovery and installation tools
@@ -1698,10 +1707,30 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 			return "No default agent workspace configured for commands.", true
 		}
 		if len(args) < 1 {
-			return "Usage: /approve <change_id>", true
+			return "Usage: /approve <change_id|all>", true
 		}
-		changeTool := tools.NewProposeChangeTool(workspace)
-		result, err := changeTool.ApproveChange(ctx, args[0])
+
+		if args[0] == "all" {
+			proposals, err := tools.LoadPendingProposals(workspace)
+			if err != nil {
+				return fmt.Sprintf("Error loading pending proposals: %v", err), true
+			}
+			if len(proposals) == 0 {
+				return "No pending proposals to approve.", true
+			}
+			var results []string
+			for _, p := range proposals {
+				result, err := tools.ApplyProposal(workspace, p.ID)
+				if err != nil {
+					results = append(results, fmt.Sprintf("❌ %s: %v", p.ID, err))
+				} else {
+					results = append(results, result)
+				}
+			}
+			return strings.Join(results, "\n"), true
+		}
+
+		result, err := tools.ApplyProposal(workspace, args[0])
 		if err != nil {
 			return fmt.Sprintf("Error approving change: %v", err), true
 		}
@@ -1712,10 +1741,30 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 			return "No default agent workspace configured for commands.", true
 		}
 		if len(args) < 1 {
-			return "Usage: /reject <change_id>", true
+			return "Usage: /reject <change_id|all>", true
 		}
-		changeTool := tools.NewProposeChangeTool(workspace)
-		result, err := changeTool.RejectChange(ctx, args[0])
+
+		if args[0] == "all" {
+			proposals, err := tools.LoadPendingProposals(workspace)
+			if err != nil {
+				return fmt.Sprintf("Error loading pending proposals: %v", err), true
+			}
+			if len(proposals) == 0 {
+				return "No pending proposals to reject.", true
+			}
+			var results []string
+			for _, p := range proposals {
+				result, err := tools.RejectProposal(workspace, p.ID)
+				if err != nil {
+					results = append(results, fmt.Sprintf("❌ %s: %v", p.ID, err))
+				} else {
+					results = append(results, result)
+				}
+			}
+			return strings.Join(results, "\n"), true
+		}
+
+		result, err := tools.RejectProposal(workspace, args[0])
 		if err != nil {
 			return fmt.Sprintf("Error rejecting change: %v", err), true
 		}
@@ -1725,12 +1774,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 		if workspace == "" {
 			return "No default agent workspace configured for commands.", true
 		}
-		changeTool := tools.NewProposeChangeTool(workspace)
-		result, err := changeTool.ListPending(ctx)
-		if err != nil {
-			return fmt.Sprintf("Error listing pending changes: %v", err), true
-		}
-		return result, true
+		return tools.FormatPendingList(workspace), true
 
 	case "/list":
 		if len(args) < 1 {
@@ -1884,8 +1928,8 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 		"/start               - Restart and clear session\n" +
 		"/status              - Show agent status\n" +
 		"/pending             - List pending file changes\n" +
-		"/approve <id>        - Approve a pending change\n" +
-		"/reject <id>         - Reject a pending change\n" +
+		"/approve <id|all>    - Approve a pending change\n" +
+		"/reject <id|all>     - Reject a pending change\n" +
 		"/list models         - List available models\n" +
 		"/switch model <name> - Switch default model and reload\n" +
 		"/run <command...>    - Execute a shell command", true
