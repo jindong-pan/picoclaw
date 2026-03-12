@@ -163,6 +163,10 @@ func registerSharedTools(
 		})
 		agent.Tools.Register(messageTool)
 
+		// Propose change tool
+		proposeChangeTool := tools.NewProposeChangeTool(agent.Workspace)
+		agent.Tools.Register(proposeChangeTool)
+
 		// Skill discovery and installation tools
 		registryMgr := skills.NewRegistryManagerFromConfig(skills.RegistryConfig{
 			MaxConcurrentSearches: cfg.Tools.Skills.MaxConcurrentSearches,
@@ -524,8 +528,14 @@ func (al *AgentLoop) processMessage(ctx context.Context, msg bus.InboundMessage)
 		return al.processSystemMessage(ctx, msg)
 	}
 
+	// Commands operate on the default agent's workspace.
+	var workspace string
+	if defaultAgent := al.registry.GetDefaultAgent(); defaultAgent != nil {
+		workspace = defaultAgent.Workspace
+	}
+
 	// Check for commands
-	if response, handled := al.handleCommand(ctx, msg); handled {
+	if response, handled := al.handleCommand(ctx, msg, workspace); handled {
 		return response, nil
 	}
 
@@ -1500,7 +1510,7 @@ func (al *AgentLoop) estimateTokens(messages []providers.Message) int {
 	return totalChars * 2 / 5
 }
 
-func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) (string, bool) {
+func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, workspace string) (string, bool) {
 	content := strings.TrimSpace(msg.Content)
 	if !strings.HasPrefix(content, "/") {
 		return "", false
@@ -1683,6 +1693,44 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 
 		return sb.String(), true
 
+	case "/approve":
+		if workspace == "" {
+			return "No default agent workspace configured for commands.", true
+		}
+		if len(args) < 1 {
+			return "Usage: /approve <change_id>", true
+		}
+		changeTool := tools.NewProposeChangeTool(workspace)
+		result, err := changeTool.ApproveChange(ctx, args[0])
+		if err != nil {
+			return fmt.Sprintf("Error approving change: %v", err), true
+		}
+		return result, true
+
+	case "/reject":
+		if workspace == "" {
+			return "No default agent workspace configured for commands.", true
+		}
+		if len(args) < 1 {
+			return "Usage: /reject <change_id>", true
+		}
+		changeTool := tools.NewProposeChangeTool(workspace)
+		result, err := changeTool.RejectChange(ctx, args[0])
+		if err != nil {
+			return fmt.Sprintf("Error rejecting change: %v", err), true
+		}
+		return result, true
+
+	case "/pending":
+		if workspace == "" {
+			return "No default agent workspace configured for commands.", true
+		}
+		changeTool := tools.NewProposeChangeTool(workspace)
+		result, err := changeTool.ListPending(ctx)
+		if err != nil {
+			return fmt.Sprintf("Error listing pending changes: %v", err), true
+		}
+		return result, true
 
 	case "/list":
 		if len(args) < 1 {
@@ -1835,6 +1883,9 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage) 
 	return "Unknown command. Available commands:\n" +
 		"/start               - Restart and clear session\n" +
 		"/status              - Show agent status\n" +
+		"/pending             - List pending file changes\n" +
+		"/approve <id>        - Approve a pending change\n" +
+		"/reject <id>         - Reject a pending change\n" +
 		"/list models         - List available models\n" +
 		"/switch model <name> - Switch default model and reload\n" +
 		"/run <command...>    - Execute a shell command", true
