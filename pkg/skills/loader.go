@@ -212,8 +212,8 @@ func (sl *SkillsLoader) BuildSkillsSummary() string {
 		if err == nil {
 			body := sl.stripFrontmatter(string(content))
 			body = strings.TrimSpace(body)
-			if len(body) > 800 {
-				body = body[:800] + "...(truncated)"
+			if len(body) > 2000 {
+				logger.WarnCF("skills", "Large skill body", map[string]any{"skill": escapedName, "chars": len(body)})
 			}
 			lines = append(lines, fmt.Sprintf("    <instructions>%s</instructions>", escapeXML(body)))
 		}
