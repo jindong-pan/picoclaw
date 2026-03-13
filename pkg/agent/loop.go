@@ -1108,7 +1108,7 @@ func (al *AgentLoop) runLLMIteration(
 				if tc.Name == "web_fetch" {
 					url, _ := tc.Arguments["url"].(string)
 					var maxChars int
-					if mc, ok := tc.Arguments["max_chars"].(float64); ok {
+					if mc, ok := tc.Arguments["maxChars"].(float64); ok {
 						maxChars = int(mc)
 					}
 
@@ -1122,7 +1122,7 @@ func (al *AgentLoop) runLLMIteration(
 						if found {
 							logger.InfoCF("agent", "Tool call cache hit", map[string]any{"tool": "web_fetch", "url": url})
 							toolResult = &tools.ToolResult{
-								ForLLM: fmt.Sprintf("[Content from cache for %s]\n\n%s", url, cachedContent),
+								ForLLM: fmt.Sprintf("[CACHE HIT - already fetched %s - same content returned. Try a different URL or answer from this data.]\n\n%s", url, cachedContent),
 							}
 							cacheHit = true
 						}
@@ -1153,7 +1153,7 @@ func (al *AgentLoop) runLLMIteration(
 					if tc.Name == "web_fetch" && toolResult.Err == nil {
 						url, _ := tc.Arguments["url"].(string)
 						var maxChars int
-						if mc, ok := tc.Arguments["max_chars"].(float64); ok {
+						if mc, ok := tc.Arguments["maxChars"].(float64); ok {
 							maxChars = int(mc)
 						}
 						if url != "" {
