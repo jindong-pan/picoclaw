@@ -818,6 +818,8 @@ func (al *AgentLoop) runLLMIteration(
 	iteration := 0
 	var totalPromptTokens, totalCompletionTokens int
 	var finalContent string
+	var toolCacheMutex sync.Mutex
+	toolCallCache := make(map[string]string)
 
 	for iteration < agent.MaxIterations {
 		iteration++
@@ -1100,25 +1102,69 @@ func (al *AgentLoop) runLLMIteration(
 						"iteration": iteration,
 					})
 
-				// Create async callback for tools that implement AsyncExecutor
-				asyncCallback := func(callbackCtx context.Context, result *tools.ToolResult) {
-					if !result.Silent && result.ForUser != "" {
-						logger.InfoCF("agent", "Async tool completed, agent will handle notification",
-							map[string]any{
-								"tool":        tc.Name,
-								"content_len": len(result.ForUser),
-							})
+				var toolResult *tools.ToolResult
+				cacheHit := false
+
+				if tc.Name == "web_fetch" {
+					url, _ := tc.Arguments["url"].(string)
+					var maxChars int
+					if mc, ok := tc.Arguments["max_chars"].(float64); ok {
+						maxChars = int(mc)
+					}
+
+					if url != "" {
+						cacheKey := fmt.Sprintf("web_fetch:%s:%d", url, maxChars)
+
+						toolCacheMutex.Lock()
+						cachedContent, found := toolCallCache[cacheKey]
+						toolCacheMutex.Unlock()
+
+						if found {
+							logger.InfoCF("agent", "Tool call cache hit", map[string]any{"tool": "web_fetch", "url": url})
+							toolResult = &tools.ToolResult{
+								ForLLM: fmt.Sprintf("[Content from cache for %s]\n\n%s", url, cachedContent),
+							}
+							cacheHit = true
+						}
 					}
 				}
 
-				toolResult := agent.Tools.ExecuteWithContext(
-					ctx,
-					tc.Name,
-					tc.Arguments,
-					opts.Channel,
-					opts.ChatID,
-					asyncCallback,
-				)
+				if !cacheHit {
+					// Create async callback for tools that implement AsyncExecutor
+					asyncCallback := func(callbackCtx context.Context, result *tools.ToolResult) {
+						if !result.Silent && result.ForUser != "" {
+							logger.InfoCF("agent", "Async tool completed, agent will handle notification",
+								map[string]any{
+									"tool":        tc.Name,
+									"content_len": len(result.ForUser),
+								})
+						}
+					}
+
+					toolResult = agent.Tools.ExecuteWithContext(
+						ctx,
+						tc.Name,
+						tc.Arguments,
+						opts.Channel,
+						opts.ChatID,
+						asyncCallback,
+					)
+
+					if tc.Name == "web_fetch" && toolResult.Err == nil {
+						url, _ := tc.Arguments["url"].(string)
+						var maxChars int
+						if mc, ok := tc.Arguments["max_chars"].(float64); ok {
+							maxChars = int(mc)
+						}
+						if url != "" {
+							cacheKey := fmt.Sprintf("web_fetch:%s:%d", url, maxChars)
+							toolCacheMutex.Lock()
+							toolCallCache[cacheKey] = toolResult.ForLLM
+							toolCacheMutex.Unlock()
+						}
+					}
+				}
+
 				agentResults[idx].result = toolResult
 			}(i, tc)
 		}
