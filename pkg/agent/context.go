@@ -136,6 +136,16 @@ The following skills extend your capabilities. Use the instructions provided dir
                 parts = append(parts, "# Memory\n\n"+memoryContext)
         }
 
+        // Lessons context — load approved lessons into system prompt automatically
+        lessonsPath := filepath.Join(cb.workspace, "LESSONS.md")
+        if data, err := os.ReadFile(lessonsPath); err == nil && len(data) > 0 {
+                lessons := string(data)
+                if len(lessons) > 800 {
+                        lessons = lessons[:800] + "... (truncated)"
+                }
+                parts = append(parts, "# Lessons\n\n"+lessons)
+        }
+
         // Join with "---" separator
         return strings.Join(parts, "\n\n---\n\n")
 }
@@ -208,6 +218,7 @@ func (cb *ContextBuilder) sourcePaths() []string {
 		filepath.Join(cb.workspace, "USER.md"),
 		filepath.Join(cb.workspace, "IDENTITY.md"),
 		filepath.Join(cb.workspace, "memory", "MEMORY.md"),
+		filepath.Join(cb.workspace, "LESSONS.md"),
 	}
 }
 
