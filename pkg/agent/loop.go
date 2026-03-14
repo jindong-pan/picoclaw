@@ -708,7 +708,7 @@ func (al *AgentLoop) runAgentLoop(
 	agent.Sessions.AddMessage(opts.SessionKey, "user", opts.UserMessage)
 
 	// 3. Run LLM iteration loop
-	finalContent, iteration, err := al.runLLMIteration(ctx, agent, messages, opts)
+	finalContent, iteration, toolLog, err := al.runLLMIteration(ctx, agent, messages, opts)
 	if err != nil {
 		return "", err
 	}
@@ -719,6 +719,10 @@ func (al *AgentLoop) runAgentLoop(
 	// 4. Handle empty response
 	if finalContent == "" {
 		finalContent = opts.DefaultResponse
+	}
+
+	if finalContent == opts.DefaultResponse && opts.DefaultResponse == defaultResponse {
+		al.triggerPostMortem(ctx, opts, iteration, toolLog)
 	}
 
 	// 5. Save final assistant message to session
@@ -814,12 +818,13 @@ func (al *AgentLoop) runLLMIteration(
 	agent *AgentInstance,
 	messages []providers.Message,
 	opts processOptions,
-) (string, int, error) {
+) (string, int, []string, error) {
 	iteration := 0
 	var totalPromptTokens, totalCompletionTokens int
 	var finalContent string
 	var toolCacheMutex sync.Mutex
 	toolCallCache := make(map[string]string)
+	var toolLog []string
 
 	for iteration < agent.MaxIterations {
 		iteration++
@@ -976,7 +981,7 @@ func (al *AgentLoop) runLLMIteration(
 					"iteration": iteration,
 					"error":     err.Error(),
 				})
-			return "", iteration, fmt.Errorf("LLM call failed after retries: %w", err)
+			return "", iteration, toolLog, fmt.Errorf("LLM call failed after retries: %w", err)
 		}
 
 		go al.handleReasoning(
@@ -1036,6 +1041,7 @@ func (al *AgentLoop) runLLMIteration(
 		for _, tc := range normalizedToolCalls {
 			toolNames = append(toolNames, tc.Name)
 		}
+		toolLog = append(toolLog, toolNames...)
 		logger.InfoCF("agent", "LLM requested tool calls",
 			map[string]any{
 				"agent_id":  agent.ID,
@@ -1271,7 +1277,7 @@ func (al *AgentLoop) runLLMIteration(
 			})
 	}
 
-	return finalContent, iteration, nil
+	return finalContent, iteration, toolLog, nil
 }
 
 // maybeSummarize triggers summarization if the session history exceeds thresholds.
@@ -1753,7 +1759,18 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 			return "No default agent workspace configured for commands.", true
 		}
 		if len(args) < 1 {
-			return "Usage: /approve <change_id|all>", true
+			return "Usage: /approve <change_id|all> | lessons <id|all>", true
+		}
+
+		if args[0] == "lessons" {
+			if len(args) < 2 {
+				return "Usage: /approve lessons <id|all>", true
+			}
+			result, err := al.approveLessons(workspace, args[1])
+			if err != nil {
+				return fmt.Sprintf("Error approving lesson(s): %v", err), true
+			}
+			return result, true
 		}
 
 		if args[0] == "all" {
@@ -1787,7 +1804,18 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 			return "No default agent workspace configured for commands.", true
 		}
 		if len(args) < 1 {
-			return "Usage: /reject <change_id|all>", true
+			return "Usage: /reject <change_id|all> | lessons <id|all>", true
+		}
+
+		if args[0] == "lessons" {
+			if len(args) < 2 {
+				return "Usage: /reject lessons <id|all>", true
+			}
+			result, err := al.rejectLessons(workspace, args[1])
+			if err != nil {
+				return fmt.Sprintf("Error rejecting lesson(s): %v", err), true
+			}
+			return result, true
 		}
 
 		if args[0] == "all" {
@@ -1975,7 +2003,9 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 		"/status              - Show agent status\n" +
 		"/pending             - List pending file changes\n" +
 		"/approve <id|all>    - Approve a pending change\n" +
+		"/approve lessons <id>  - Approve a learned lesson\n" +
 		"/reject <id|all>     - Reject a pending change\n" +
+		"/reject lessons <id>   - Reject a learned lesson\n" +
 		"/list models         - List available models\n" +
 		"/switch model <name> - Switch default model and reload\n" +
 		"/run <command...>    - Execute a shell command", true
