@@ -78,7 +78,7 @@ func (al *AgentLoop) triggerPostMortem(ctx context.Context, opts processOptions,
 			"⚠️ *Failure detected* (iteration limit reached)\n\n"+
 				"*Query:* %s\n\n"+
 				"*Proposed lesson:*\n%s\n\n"+
-				"Reply `/approve %s` to save or `/reject %s` to discard.",
+				"Reply `/approve lessons %s` to save or `/reject lessons %s` to discard.",
 			pmTruncate(pmc.userMessage, 80),
 			lesson,
 			entryID,
