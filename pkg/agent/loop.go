@@ -1766,10 +1766,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 			if len(args) < 2 {
 				return "Usage: /approve lessons <id|all>", true
 			}
-			result, err := al.approveLessons(workspace, args[1])
-			if err != nil {
-				return fmt.Sprintf("Error approving lesson(s): %v", err), true
-			}
+			result := approveLessons(workspace, args[1])
 			return result, true
 		}
 
@@ -1811,10 +1808,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 			if len(args) < 2 {
 				return "Usage: /reject lessons <id|all>", true
 			}
-			result, err := al.rejectLessons(workspace, args[1])
-			if err != nil {
-				return fmt.Sprintf("Error rejecting lesson(s): %v", err), true
-			}
+			result := rejectLessons(workspace, args[1])
 			return result, true
 		}
 
