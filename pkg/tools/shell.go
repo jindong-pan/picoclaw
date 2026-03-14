@@ -331,7 +331,12 @@ func (t *ExecTool) guardCommand(command, cwd string) string {
 			return ""
 		}
 
-		matches := absolutePathPattern.FindAllString(cmd, -1)
+		// Define a pattern to find and remove URLs to avoid misinterpreting them as file paths.
+		urlPattern := regexp.MustCompile(`\w+://[^\s"']+`)
+		cmdSanitized := urlPattern.ReplaceAllString(cmd, "")
+
+		absolutePathPattern := regexp.MustCompile(`/[^\s"']+`)
+		matches := absolutePathPattern.FindAllString(cmdSanitized, -1)
 
 		for _, raw := range matches {
 			p, err := filepath.Abs(raw)
