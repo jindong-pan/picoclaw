@@ -1,49 +1,22 @@
 ---
 name: weather
 description: Get current weather and forecasts (no API key required).
-homepage: https://wttr.in/:help
-metadata: {"nanobot":{"emoji":"🌤️","requires":{"bins":["curl"]}}}
 ---
-
 # Weather
 
-Two free services, no API keys needed.
+Use web_fetch to get weather from wttr.in. No API key needed.
 
-## wttr.in (primary)
+## Quick current weather
+web_fetch: `https://wttr.in/CITY?format=3`
+Example: `https://wttr.in/Hong+Kong?format=3`
+Output: `Hong Kong: ⛅️ +19°C`
 
-Quick one-liner:
-```bash
-curl -s "wttr.in/London?format=3"
-# Output: London: ⛅️ +8°C
-```
+## Detailed current weather
+web_fetch: `https://wttr.in/CITY?format=%l:+%c+%t+%h+%w`
+Output: `Hong Kong: ⛅️ +19°C 73% ↙11km/h`
 
-Compact format:
-```bash
-curl -s "wttr.in/London?format=%l:+%c+%t+%h+%w"
-# Output: London: ⛅️ +8°C 71% ↙5km/h
-```
-
-Full forecast:
-```bash
-curl -s "wttr.in/London?T"
-```
-
-Format codes: `%c` condition · `%t` temp · `%h` humidity · `%w` wind · `%l` location · `%m` moon
-
-Tips:
-- URL-encode spaces: `wttr.in/New+York`
-- Airport codes: `wttr.in/JFK`
-- Units: `?m` (metric) `?u` (USCS)
-- Today only: `?1` · Current only: `?0`
-- PNG: `curl -s "wttr.in/Berlin.png" -o /tmp/weather.png`
-
-## Open-Meteo (fallback, JSON)
-
-Free, no key, good for programmatic use:
-```bash
-curl -s "https://api.open-meteo.com/v1/forecast?latitude=51.5&longitude=-0.12&current_weather=true"
-```
-
-Find coordinates for a city, then query. Returns JSON with temp, windspeed, weathercode.
-
-Docs: https://open-meteo.com/en/docs
+## Tips
+- URL-encode spaces: `New+York`
+- Airport codes: `JFK`  
+- Units: `?m` metric, `?u` USCS
+- maxChars: 200 is sufficient
