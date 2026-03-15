@@ -1754,20 +1754,12 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 
 		return sb.String(), true
 
-	case "/approve":
+	case "/approve_update":
 		if workspace == "" {
 			return "No default agent workspace configured for commands.", true
 		}
 		if len(args) < 1 {
-			return "Usage: /approve <change_id|all> | lessons <id|all>", true
-		}
-
-		if args[0] == "lessons" {
-			if len(args) < 2 {
-				return "Usage: /approve lessons <id|all>", true
-			}
-			result := approveLessons(workspace, args[1])
-			return result, true
+			return "Usage: /approve_update <change_id|all>", true
 		}
 
 		if args[0] == "all" {
@@ -1796,20 +1788,21 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 		}
 		return result, true
 
-	case "/reject":
+	case "/approve_lesson":
 		if workspace == "" {
 			return "No default agent workspace configured for commands.", true
 		}
 		if len(args) < 1 {
-			return "Usage: /reject <change_id|all> | lessons <id|all>", true
+			return "Usage: /approve_lesson <id|all>", true
 		}
+		return approveLessons(workspace, args[0]), true
 
-		if args[0] == "lessons" {
-			if len(args) < 2 {
-				return "Usage: /reject lessons <id|all>", true
-			}
-			result := rejectLessons(workspace, args[1])
-			return result, true
+	case "/reject_update":
+		if workspace == "" {
+			return "No default agent workspace configured for commands.", true
+		}
+		if len(args) < 1 {
+			return "Usage: /reject_update <change_id|all>", true
 		}
 
 		if args[0] == "all" {
@@ -1838,11 +1831,26 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 		}
 		return result, true
 
-	case "/pending":
+	case "/reject_lesson":
+		if workspace == "" {
+			return "No default agent workspace configured for commands.", true
+		}
+		if len(args) < 1 {
+			return "Usage: /reject_lesson <id|all>", true
+		}
+		return rejectLessons(workspace, args[0]), true
+
+	case "/pending_updates":
 		if workspace == "" {
 			return "No default agent workspace configured for commands.", true
 		}
 		return tools.FormatPendingList(workspace), true
+
+	case "/pending_lessons":
+		if workspace == "" {
+			return "No default agent workspace configured for commands.", true
+		}
+		return listPendingLessons(workspace), true
 
 	case "/list":
 		if len(args) < 1 {
@@ -1993,16 +2001,17 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 	}
 
 	return "Unknown command. Available commands:\n" +
-		"/start               - Restart and clear session\n" +
-		"/status              - Show agent status\n" +
-		"/pending             - List pending file changes\n" +
-		"/approve <id|all>    - Approve a pending change\n" +
-		"/approve lessons <id>  - Approve a learned lesson\n" +
-		"/reject <id|all>     - Reject a pending change\n" +
-		"/reject lessons <id>   - Reject a learned lesson\n" +
-		"/list models         - List available models\n" +
-		"/switch model <name> - Switch default model and reload\n" +
-		"/run <command...>    - Execute a shell command", true
+		"/start                 - Restart and clear session\n" +
+		"/status                - Show agent status\n" +
+		"/pending_updates       - List pending file changes\n" +
+		"/approve_update <id|all> - Approve a pending file change\n" +
+		"/reject_update <id|all>  - Reject a pending file change\n" +
+		"/pending_lessons       - List pending learned lessons\n" +
+		"/approve_lesson <id|all> - Approve a pending lesson\n" +
+		"/reject_lesson <id|all>  - Reject a pending lesson\n" +
+		"/list models           - List available models\n" +
+		"/switch model <name>   - Switch default model and reload\n" +
+		"/run <command...>      - Execute a shell command", true
 }
 
 // extractPeer extracts the routing peer from the inbound message's structured Peer field.
