@@ -1754,7 +1754,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 
 		return sb.String(), true
 
-	case "/approve_update":
+	case "/approveupdate", "/approve_update":
 		if workspace == "" {
 			return "No default agent workspace configured for commands.", true
 		}
@@ -1788,7 +1788,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 		}
 		return result, true
 
-	case "/approve_lesson":
+	case "/approvelesson", "/approve_lesson":
 		if workspace == "" {
 			return "No default agent workspace configured for commands.", true
 		}
@@ -1797,7 +1797,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 		}
 		return approveLessons(workspace, args[0]), true
 
-	case "/reject_update":
+	case "/rejectupdate", "/reject_update":
 		if workspace == "" {
 			return "No default agent workspace configured for commands.", true
 		}
@@ -1831,7 +1831,7 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 		}
 		return result, true
 
-	case "/reject_lesson":
+	case "/rejectlesson", "/reject_lesson":
 		if workspace == "" {
 			return "No default agent workspace configured for commands.", true
 		}
@@ -1840,13 +1840,13 @@ func (al *AgentLoop) handleCommand(ctx context.Context, msg bus.InboundMessage, 
 		}
 		return rejectLessons(workspace, args[0]), true
 
-	case "/pending_updates":
+	case "/pendingupdates", "/pending_updates":
 		if workspace == "" {
 			return "No default agent workspace configured for commands.", true
 		}
 		return tools.FormatPendingList(workspace), true
 
-	case "/pending_lessons":
+	case "/pendinglessons", "/pending_lessons":
 		if workspace == "" {
 			return "No default agent workspace configured for commands.", true
 		}
