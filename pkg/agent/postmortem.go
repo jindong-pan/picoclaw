@@ -78,7 +78,7 @@ func (al *AgentLoop) triggerPostMortem(ctx context.Context, opts processOptions,
 			"⚠️ *Failure detected* (iteration limit reached)\n\n"+
 				"*Query:* %s\n\n"+
 				"*Proposed lesson:*\n%s\n\n"+
-				"Reply `/approve lessons %s` to save or `/reject lessons %s` to discard.",
+				"Reply `/approve_lesson %s` to save or `/reject_lesson %s` to discard.",
 			pmTruncate(pmc.userMessage, 80),
 			lesson,
 			entryID,
@@ -250,7 +250,7 @@ func listPendingLessons(workspace string) string {
 	}
 
 	return "Pending lessons:\n" + strings.Join(pending, "\n") +
-		"\n\nUse `/approve <id>`, `/approve all`, `/reject <id>`, or `/reject all`."
+		"\n\nUse `/approve_lesson <id|all>` or `/reject_lesson <id|all>`."
 }
 
 // pmTruncate truncates a string to max chars.
