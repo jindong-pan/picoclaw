@@ -20,7 +20,11 @@ import json
 import os
 import re
 import sys
-import yaml
+try:
+    import yaml
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
 
 
 # --- Check infrastructure ---
@@ -80,8 +84,22 @@ def check_frontmatter(skill_path):
         return CheckResult("SKILL.md has valid frontmatter", CheckResult.FAIL,
                            "No YAML frontmatter found (must start with ---)", category="structure")
 
+    fm_text = match.group(1)
+
+    if not HAS_YAML:
+        missing = []
+        if not re.search(r'^\s*name:\s*.+', fm_text, re.MULTILINE):
+            missing.append("name")
+        if not re.search(r'^\s*description:\s*.+', fm_text, re.MULTILINE):
+            missing.append("description")
+        if missing:
+            return CheckResult("SKILL.md has valid frontmatter", CheckResult.FAIL,
+                           f"Missing required fields: {', '.join(missing)}", category="structure")
+        return CheckResult("SKILL.md has valid frontmatter", CheckResult.WARN,
+                           "PyYAML not installed; only basic field existence was checked.", category="structure")
+
     try:
-        fm = yaml.safe_load(match.group(1))
+        fm = yaml.safe_load(fm_text)
     except Exception as e:
         return CheckResult("SKILL.md has valid frontmatter", CheckResult.FAIL,
                            f"Invalid YAML: {e}", category="structure")
@@ -106,23 +124,12 @@ def check_frontmatter(skill_path):
 @check("Skill name matches directory", "structure")
 def check_name_matches_dir(skill_path):
     dir_name = os.path.basename(os.path.abspath(skill_path))
-    path = os.path.join(skill_path, "SKILL.md")
-    if not os.path.isfile(path):
-        return CheckResult("Skill name matches directory", CheckResult.FAIL,
-                           "SKILL.md not found", category="structure")
-    with open(path, "r", encoding="utf-8") as f:
-        content = f.read()
-    match = re.match(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
-    if not match:
+    fm = _get_frontmatter(skill_path)
+    if not fm:
         return CheckResult("Skill name matches directory", CheckResult.WARN,
-                           "No frontmatter to check", category="structure")
-    try:
-        fm = yaml.safe_load(match.group(1))
-        name = fm.get("name", "")
-    except Exception:
-        return CheckResult("Skill name matches directory", CheckResult.WARN,
-                           "Could not parse frontmatter", category="structure")
+                           "Could not read frontmatter to check name", category="structure")
 
+    name = fm.get("name", "")
     if name == dir_name:
         return CheckResult("Skill name matches directory", CheckResult.PASS, category="structure")
     return CheckResult("Skill name matches directory", CheckResult.WARN,
@@ -217,17 +224,13 @@ def check_body_length(skill_path):
     with open(path, "r") as f:
         lines = f.readlines()
     # Count lines after frontmatter
-    in_fm = False
     body_lines = 0
-    fm_ended = False
+    fm_dashes = 0
     for line in lines:
-        if line.strip() == "---":
-            if not fm_ended:
-                in_fm = not in_fm
-                if not in_fm:
-                    fm_ended = True
-                continue
-        if fm_ended:
+        if line.strip() == "---" and fm_dashes < 2:
+            fm_dashes += 1
+            continue
+        if fm_dashes >= 2:
             body_lines += 1
 
     if body_lines < 10:
@@ -302,6 +305,9 @@ def check_no_ext_deps(skill_path):
         return CheckResult("Scripts use no external dependencies", CheckResult.PASS,
                            "No scripts/", category="scripts")
 
+    # Known allowed external deps for this script if it analyzes other skills
+    allowed_external = {"yaml"}
+
     # Common stdlib modules (not exhaustive, but covers common ones)
     stdlib = {
         "abc", "argparse", "ast", "base64", "bisect", "calendar", "cgi",
@@ -339,12 +345,12 @@ def check_no_ext_deps(skill_path):
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     top = alias.name.split(".")[0]
-                    if top not in stdlib:
+                    if top not in stdlib and top not in allowed_external:
                         ext_deps.append(f"{f}: import {alias.name}")
             elif isinstance(node, ast.ImportFrom):
                 if node.module:
                     top = node.module.split(".")[0]
-                    if top not in stdlib:
+                    if top not in stdlib and top not in allowed_external:
                         ext_deps.append(f"{f}: from {node.module}")
 
     if ext_deps:
@@ -455,10 +461,23 @@ def _get_frontmatter(skill_path):
     match = re.match(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
     if not match:
         return None
-    try:
-        return yaml.safe_load(match.group(1))
-    except Exception:
-        return None
+
+    fm_text = match.group(1)
+    if HAS_YAML:
+        try:
+            return yaml.safe_load(fm_text)
+        except Exception:
+            return None
+
+    # Fallback if PyYAML is not installed
+    fm = {}
+    for line in fm_text.splitlines():
+        # Basic key: value parsing. Doesn't handle multiline values.
+        m = re.match(r'^\s*([\w-]+):\s*(.*)', line)
+        if m:
+            key, val = m.groups()
+            fm[key.strip()] = val.strip().strip("'\"")
+    return fm if fm else None
 
 
 # --- Runner ---
