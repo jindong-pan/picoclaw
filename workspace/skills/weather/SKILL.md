@@ -1,6 +1,6 @@
 ---
 name: weather
-description: Get current weather and forecasts (no API key required).
+description: Provides real-time weather information, including current conditions, five-day forecasts, and severe weather alerts for global locations. **Use when** the user asks about the temperature, needs to know if it will rain, or requires a clothing recommendation based on the local climate.
 ---
 # Weather
 
