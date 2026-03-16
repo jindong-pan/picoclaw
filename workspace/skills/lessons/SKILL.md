@@ -1,6 +1,6 @@
 ---
 name: lessons
-description: Record lessons from failures and past experience. Use propose_change to append to LESSONS.md when a task fails, an approach wastes tokens, or a better method is found. Read LESSONS.md before attempting tasks that have failed before.
+description: Record lessons from failures and past experience. Use when a task fails, an approach wastes tokens, or a better method is found. Use propose_change to append to LESSONS.md. Read LESSONS.md before attempting tasks that have failed before.
 ---
 # Lessons
 
