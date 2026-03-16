@@ -1,6 +1,6 @@
 ---
 name: agent-browser-cli
-description: 使用 agent-browser CLI 进行浏览器自动化。用于签到、填表、截图、信息抓取等需要控制浏览器的任务。触发条件：(1) 用户要求自动化浏览器操作 (2) 需要签到、填表、点击按钮 (3) 需要抓取网页内容作为研究素材
+description: Provides a command-line interface for web browsing. Use when you need to browse websites, fill out forms, click links, read content from a URL, or perform other web-based interactions.
 ---
 
 # Agent Browser
@@ -62,14 +62,14 @@ agent-browser fill @e13 "hello"
 或使用 CSS 选择器：
 ```bash
 agent-browser click "#submit"
-agent-browser fill "input[name='email']" "test@test.com"
+agent-browser fill "input[name='email']" "{{ADMIN_EMAIL}}"
 ```
 
 或使用 ARIA 角色查找：
 ```bash
 agent-browser find role button click --name "Submit"
 agent-browser find text "Sign In" click
-agent-browser find label "Email" fill "test@test.com"
+agent-browser find label "Email" fill "{{ADMIN_EMAIL}}"
 agent-browser find placeholder "Search" type "query"
 ```
 
