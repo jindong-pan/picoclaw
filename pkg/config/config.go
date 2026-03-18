@@ -183,6 +183,7 @@ type AgentDefaults struct {
 	SummarizeMessageThreshold int      `json:"summarize_message_threshold"     env:"PICOCLAW_AGENTS_DEFAULTS_SUMMARIZE_MESSAGE_THRESHOLD"`
 	SummarizeTokenPercent     int      `json:"summarize_token_percent"         env:"PICOCLAW_AGENTS_DEFAULTS_SUMMARIZE_TOKEN_PERCENT"`
 	MaxMediaSize              int      `json:"max_media_size,omitempty"        env:"PICOCLAW_AGENTS_DEFAULTS_MAX_MEDIA_SIZE"`
+	Language                  string   `json:"language,omitempty"              env:"PICOCLAW_AGENTS_DEFAULTS_LANGUAGE"`
 }
 
 const DefaultMaxMediaSize = 20 * 1024 * 1024 // 20 MB

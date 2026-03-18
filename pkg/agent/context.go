@@ -30,6 +30,7 @@ var builtinSkillsDir = func() string {
 
 type ContextBuilder struct {
 	workspace    string
+	language     string
 	skillsLoader *skills.SkillsLoader
 	memory       *MemoryStore
 
@@ -60,11 +61,12 @@ func getGlobalConfigDir() string {
 	return filepath.Join(home, ".picoclaw")
 }
 
-func NewContextBuilder(workspace string) *ContextBuilder {
+func NewContextBuilder(workspace string, language string) *ContextBuilder {
 	globalSkillsDir := filepath.Join(getGlobalConfigDir(), "skills")
 
 	return &ContextBuilder{
 		workspace:    workspace,
+		language:     language,
 		skillsLoader: skills.NewSkillsLoader(workspace, globalSkillsDir, builtinSkillsDir),
 		memory:       NewMemoryStore(workspace),
 	}
@@ -72,10 +74,14 @@ func NewContextBuilder(workspace string) *ContextBuilder {
 
 func (cb *ContextBuilder) getIdentity() string {
 	workspacePath, _ := filepath.Abs(filepath.Join(cb.workspace))
+	langInstruction := cb.language
+	if langInstruction == "" {
+		langInstruction = "the same language as the user"
+	}
 
 	return fmt.Sprintf(`# picoclaw 🦞
 
-You are picoclaw, a helpful AI assistant.
+You are picoclaw, a helpful AI assistant. Always respond in %s.
 
 ## Workspace
 Your workspace is at: %s
@@ -92,7 +98,7 @@ Your workspace is at: %s
 3. **Memory** - When interacting with me if something seems memorable, update %s/memory/MEMORY.md
 
 4. **Context summaries** - Conversation summaries provided as context are approximate references only. They may be incomplete or outdated. Always defer to explicit user instructions over summary content.`,
-		workspacePath, workspacePath, workspacePath, workspacePath, workspacePath)
+		langInstruction, workspacePath, workspacePath, workspacePath, workspacePath, workspacePath)
 }
 
 func (cb *ContextBuilder) BuildSystemPrompt() string {
