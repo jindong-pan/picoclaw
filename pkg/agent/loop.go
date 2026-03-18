@@ -143,6 +143,9 @@ func registerSharedTools(
 		if err != nil {
 			logger.ErrorCF("agent", "Failed to create web fetch tool", map[string]any{"error": err.Error()})
 		} else {
+			if len(cfg.Tools.Web.FetchBlocklist) > 0 {
+				fetchTool.SetBlocklist(cfg.Tools.Web.FetchBlocklist)
+			}
 			agent.Tools.Register(fetchTool)
 		}
 

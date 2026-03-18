@@ -630,6 +630,7 @@ func (t *WebSearchTool) Execute(ctx context.Context, args map[string]any) *ToolR
 }
 
 type WebFetchTool struct {
+	blocklist       []string
 	maxChars        int
 	proxy           string
 	client          *http.Client
@@ -663,7 +664,14 @@ func NewWebFetchToolWithProxy(maxChars int, proxy string, fetchLimitBytes int64)
 		proxy:           proxy,
 		client:          client,
 		fetchLimitBytes: fetchLimitBytes,
+		blocklist:       []string{},
 	}, nil
+}
+
+// SetBlocklist sets domains that web_fetch will refuse to access.
+// Entries are matched as substrings of the host (e.g. "yahoo.com" blocks "query1.finance.yahoo.com").
+func (t *WebFetchTool) SetBlocklist(domains []string) {
+	t.blocklist = domains
 }
 
 func (t *WebFetchTool) Name() string {
@@ -709,6 +717,12 @@ func (t *WebFetchTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 
 	if parsedURL.Host == "" {
 		return ErrorResult("missing domain in URL")
+	}
+	// Check blocklist
+	for _, blocked := range t.blocklist {
+		if strings.Contains(parsedURL.Host, blocked) {
+			return ErrorResult(fmt.Sprintf("domain %s is blocked. Use an alternative source.", parsedURL.Host))
+		}
 	}
 
 	maxChars := t.maxChars
