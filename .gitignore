@@ -13,7 +13,8 @@ build/
 /picoclaw
 /picoclaw-test
 cmd/**/workspace
-__debug__*
+__debug*
+*.log
 *.gz
 
 # Picoclaw specific
@@ -52,3 +53,4 @@ dist/
 # Windows Application Icon/Resource
 *.syso
 .aider*
+picoclaw
