@@ -1,6 +1,7 @@
 # Binaries
 # Go build artifacts
 .env
+.env.bak
 .aider*
 bin/
 build/
