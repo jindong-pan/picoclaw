@@ -3,8 +3,8 @@
 # migrate_secrets.sh — Extract secrets from config.json into a .env file
 # =============================================================================
 # WHAT THIS DOES:
-#   1. Reads your existing ~/picoclaw/config.json
-#   2. Extracts all API keys and tokens into ~/picoclaw/.env
+#   1. Reads your working ~/.picoclaw/config.json  (where picoclaw actually runs)
+#   2. Extracts all API keys and tokens into ~/picoclaw/.env  (git repo, gitignored)
 #   3. Replaces the secrets in config.json with ${ENV_VAR} placeholders
 #   4. Creates backups of both files before modifying anything
 #   5. Adds .env to .gitignore
@@ -14,12 +14,25 @@
 # USAGE:
 #   chmod +x migrate_secrets.sh
 #   ./migrate_secrets.sh
+#
+#   # Custom paths if needed:
+#   ./migrate_secrets.sh --project ~/picoclaw --config ~/.picoclaw/config.json
 # =============================================================================
 
 set -euo pipefail
 
-PROJECT="${1:-$HOME/picoclaw}"
-CONFIG="$PROJECT/config.json"
+# ── Argument parsing ──────────────────────────────────────────────────────────
+PROJECT="$HOME/picoclaw"          # git repo root — where .env and .gitignore live
+CONFIG="$HOME/.picoclaw/config.json"  # picoclaw's actual working config
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --project) PROJECT="$2"; shift 2 ;;
+        --config)  CONFIG="$2";  shift 2 ;;
+        *)         PROJECT="$1"; shift   ;;  # positional arg = project dir (legacy)
+    esac
+done
+
 ENV_FILE="$PROJECT/.env"
 GITIGNORE="$PROJECT/.gitignore"
 BACKUP_DIR="$PROJECT/.secrets_backup_$(date +%Y%m%d_%H%M%S)"
@@ -37,11 +50,15 @@ echo ""
 echo -e "${CYAN}${BOLD}════════════════════════════════════════${RESET}"
 echo -e "${CYAN}${BOLD}  PicoClaw Secret Migration Tool        ${RESET}"
 echo -e "${CYAN}${BOLD}════════════════════════════════════════${RESET}"
+echo ""
+echo -e "  Config (read)  : ${BOLD}$CONFIG${RESET}"
+echo -e "  .env (written) : ${BOLD}$ENV_FILE${RESET}"
+echo -e "  Project root   : ${BOLD}$PROJECT${RESET}"
 
 # ── Preflight ─────────────────────────────────────────────────────────────────
 step "Preflight checks"
 
-[[ -d "$PROJECT" ]]  || error "Project not found: $PROJECT"
+[[ -d "$PROJECT" ]]  || error "Project dir not found: $PROJECT"
 [[ -f "$CONFIG"  ]]  || error "config.json not found: $CONFIG"
 
 # Check for python3 or jq for JSON parsing
@@ -328,17 +345,16 @@ echo -e "${CYAN}${BOLD}═══════════════════
 echo -e "${CYAN}${BOLD}  Migration Complete                     ${RESET}"
 echo -e "${CYAN}${BOLD}════════════════════════════════════════${RESET}"
 echo ""
-echo -e "  Backups saved : ${BOLD}$BACKUP_DIR${RESET}"
-echo -e "  Secrets file  : ${BOLD}$PROJECT/.env${RESET}  ← keep this private"
-echo -e "  Clean config  : ${BOLD}$PROJECT/config.json${RESET}  ← safe to commit"
+echo -e "  Backups saved  : ${BOLD}$BACKUP_DIR${RESET}"
+echo -e "  Secrets file   : ${BOLD}$ENV_FILE${RESET}  ← keep this private"
+echo -e "  Clean config   : ${BOLD}$CONFIG${RESET}  ← safe to commit"
 echo ""
 echo -e "  ${CYAN}${BOLD}Next steps:${RESET}"
-echo "    1. Verify .env has all your keys:  cat ~/picoclaw/.env"
-echo "    2. Test it works:                  ./start.sh"
+echo "    1. Verify .env has all your keys:  cat $ENV_FILE"
+echo "    2. Test picoclaw still works:      cd $PROJECT && source .env && picoclaw agent -m 'hello'"
 echo "    3. Revoke your old OpenRouter key: https://openrouter.ai/keys"
-echo "    4. Generate a new key and add it:  echo 'PICOCLAW_OPENROUTER_API_KEY=sk-or-v1-newkey' >> ~/picoclaw/.env"
-echo "    5. Commit the clean config:        git add config.json .gitignore && git commit -m 'chore: move secrets to .env'"
+echo "    4. Add your new key to .env:       echo 'PICOCLAW_OPENROUTER_API_KEY=sk-or-v1-newkey' >> $ENV_FILE"
+echo "    5. Commit the clean config:        git -C $PROJECT add $CONFIG .gitignore && git commit -m 'chore: move secrets to .env'"
 echo ""
-echo -e "  ${YELLOW}⚠  IMPORTANT: Your .env is NOT committed to git.${RESET}"
-echo -e "  ${YELLOW}   Back it up somewhere secure (password manager, etc.)${RESET}"
+echo -e "  ${YELLOW}⚠  IMPORTANT: .env is NOT committed to git — back it up securely.${RESET}"
 echo ""
