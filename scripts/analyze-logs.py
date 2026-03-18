@@ -22,7 +22,11 @@ from datetime import datetime, timedelta
 # ── Patterns ──────────────────────────────────────────────────────────────────
 
 RE_TIMESTAMP   = re.compile(r'\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\]')
-RE_TOKEN_USAGE = re.compile(r'Token usage summary.*?total_prompt=(\d+).*?total_completion=(\d+).*?total_tokens=(\d+).*?iterations=(\d+)', re.S)
+RE_TOKEN_SUMMARY     = re.compile(r'Token usage summary')
+RE_TOTAL_PROMPT      = re.compile(r'total_prompt=(\d+)')
+RE_TOTAL_COMPLETION  = re.compile(r'total_completion=(\d+)')
+RE_TOTAL_TOKENS      = re.compile(r'total_tokens=(\d+)')
+RE_ITERATIONS        = re.compile(r'iterations=(\d+)')
 RE_TOOL_CALL   = re.compile(r'Tool call: (\w+)\((\{.*?\})\)')
 RE_CACHE_HIT   = re.compile(r'Tool call cache hit.*?url=(\S+)')
 RE_SKILL_WARN  = re.compile(r'invalid skill.*?name=(\S+).*?error="([^"]+)"')
@@ -96,12 +100,15 @@ def parse_log(lines):
             current['cache_hits'].append(m.group(1))
 
         # Token summary
-        m = RE_TOKEN_USAGE.search(line)
-        if m:
-            current['prompt_tokens']     = int(m.group(1))
-            current['completion_tokens'] = int(m.group(2))
-            current['total_tokens']      = int(m.group(3))
-            current['iterations']        = int(m.group(4))
+        if RE_TOKEN_SUMMARY.search(line):
+            if m := RE_TOTAL_PROMPT.search(line):
+                current['prompt_tokens'] = int(m.group(1))
+            if m := RE_TOTAL_COMPLETION.search(line):
+                current['completion_tokens'] = int(m.group(1))
+            if m := RE_TOTAL_TOKENS.search(line):
+                current['total_tokens'] = int(m.group(1))
+            if m := RE_ITERATIONS.search(line):
+                current['iterations'] = int(m.group(1))
 
         # Static tokens
         m = RE_STATIC_TOK.search(line)
