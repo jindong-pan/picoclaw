@@ -656,8 +656,6 @@ type MCPConfig struct {
 	Servers map[string]MCPServerConfig `json:"servers,omitempty"`
 }
 
-// 1. Add "github.com/joho/godotenv" to the import block
-// 2. Add the expandEnvInModelList helper below LoadConfig
 func LoadConfig(path string) (*Config, error) {
 	cfg := DefaultConfig()
 

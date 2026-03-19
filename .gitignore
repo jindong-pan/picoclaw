@@ -55,3 +55,4 @@ dist/
 *.syso
 .aider*
 picoclaw
+.secrets_backup_*
