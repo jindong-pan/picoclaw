@@ -6,8 +6,6 @@ import (
 	"os"
 	"sync/atomic"
 
-	"github.com/joho/godotenv"
-
 	"github.com/caarlos0/env/v11"
 
 	"github.com/jindong-pan/picoclaw/pkg/fileutil"
