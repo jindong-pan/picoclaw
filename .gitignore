@@ -1,16 +1,16 @@
 # Binaries
 # Go build artifacts
 .env
-.env.bak
-.aider*
-bin/
-build/
-*.exe
-*.dll
-*.so
-*.dylib
-*.test
-*.out
+.env.bak 
+.aider* 
+bin/ 
+build/ 
+*.exe 
+*.dll 
+*.so 
+*.dylib 
+*.test 
+*.out 
 /picoclaw
 /picoclaw-test
 cmd/**/workspace
@@ -22,7 +22,6 @@ __debug*
 
 # PicoClaw
 .picoclaw/
-config.json
 sessions/
 build/
 

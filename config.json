@@ -1,0 +1,256 @@
+{
+  "agents": {
+    "defaults": {
+      "max_tool_iterations": 12,
+      "model_name": "nvidia-nemotron",
+      "restrict_to_workspace": true,
+      "workspace": "/home/rose_oasis_tw/.picoclaw/workspace",
+      "language": "Chinese (中文)"
+    }
+  },
+  "channels": {
+    "dingtalk": {
+      "allow_from": [],
+      "client_id": "YOUR_CLIENT_ID",
+      "client_secret": "YOUR_CLIENT_SECRET",
+      "enabled": false
+    },
+    "discord": {
+      "allow_from": [
+        "1459015949272350863"
+      ],
+      "enabled": true,
+      "mention_only": false,
+      "token": "${PICOCLAW_DISCORD_TOKEN}"
+    },
+    "feishu": {
+      "allow_from": [],
+      "app_id": "",
+      "app_secret": "",
+      "enabled": false,
+      "encrypt_key": "",
+      "verification_token": ""
+    },
+    "line": {
+      "allow_from": [],
+      "channel_access_token": "YOUR_LINE_CHANNEL_ACCESS_TOKEN",
+      "channel_secret": "YOUR_LINE_CHANNEL_SECRET",
+      "enabled": false,
+      "webhook_host": "0.0.0.0",
+      "webhook_path": "/webhook/line",
+      "webhook_port": 18791
+    },
+    "maixcam": {
+      "allow_from": [],
+      "enabled": false,
+      "host": "0.0.0.0",
+      "port": 18790
+    },
+    "onebot": {
+      "access_token": "",
+      "allow_from": [],
+      "enabled": false,
+      "group_trigger_prefix": [],
+      "reconnect_interval": 5,
+      "ws_url": "ws://127.0.0.1:3001"
+    },
+    "qq": {
+      "allow_from": [],
+      "app_id": "YOUR_QQ_APP_ID",
+      "app_secret": "YOUR_QQ_APP_SECRET",
+      "enabled": false
+    },
+    "slack": {
+      "allow_from": [],
+      "app_token": "xapp-YOUR-APP-TOKEN",
+      "bot_token": "xoxb-YOUR-BOT-TOKEN",
+      "enabled": false
+    },
+    "telegram": {
+      "allow_from": [
+        "7067985722"
+      ],
+      "enabled": true,
+      "proxy": "",
+      "token": "${PICOCLAW_TELEGRAM_TOKEN}"
+    },
+    "wecom": {
+      "_comment": "WeCom Bot (智能机器人) - Easier setup, supports group chats",
+      "allow_from": [],
+      "enabled": false,
+      "encoding_aes_key": "YOUR_43_CHAR_ENCODING_AES_KEY",
+      "reply_timeout": 5,
+      "token": "YOUR_TOKEN",
+      "webhook_host": "0.0.0.0",
+      "webhook_path": "/webhook/wecom",
+      "webhook_port": 18793,
+      "webhook_url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY"
+    },
+    "wecom_app": {
+      "_comment": "WeCom App (自建应用) - More features, proactive messaging, private chat only. See docs/wecom-app-configuration.md",
+      "agent_id": 1000002,
+      "allow_from": [],
+      "corp_id": "YOUR_CORP_ID",
+      "corp_secret": "YOUR_CORP_SECRET",
+      "enabled": false,
+      "encoding_aes_key": "YOUR_43_CHAR_ENCODING_AES_KEY",
+      "reply_timeout": 5,
+      "token": "YOUR_TOKEN",
+      "webhook_host": "0.0.0.0",
+      "webhook_path": "/webhook/wecom-app",
+      "webhook_port": 18792
+    },
+    "whatsapp": {
+      "allow_from": [],
+      "bridge_url": "ws://localhost:3001",
+      "enabled": false
+    }
+  },
+  "devices": {
+    "enabled": false,
+    "monitor_usb": true
+  },
+  "gateway": {
+    "host": "127.0.0.1",
+    "port": 18790
+  },
+  "heartbeat": {
+    "enabled": false,
+    "interval": 30
+  },
+  "model_list": [
+    {
+      "api_base": "http://127.0.0.1:11434/v1",
+      "api_key": "ollama",
+      "model": "ollama/qwen2.5:1.5b",
+      "model_name": "ollama-qwen",
+      "request_timeout": 300
+    },
+    {
+      "api_base": "https://openrouter.ai/api/v1",
+      "api_key": "${PICOCLAW_OPENROUTER_API_KEY}",
+      "model": "openrouter/stepfun/step-3.5-flash:free",
+      "model_name": "stepfun"
+    },
+    {
+      "api_base": "https://openrouter.ai/api/v1",
+      "api_key": "${PICOCLAW_OPENROUTER_API_KEY}",
+      "model": "openrouter/arcee-ai/trinity-large-preview:free",
+      "model_name": "arcee"
+    },
+    {
+      "api_base": "https://openrouter.ai/api/v1",
+      "api_key": "${PICOCLAW_OPENROUTER_API_KEY}",
+      "model": "openrouter/nvidia/nemotron-3-nano-30b-a3b:free",
+      "model_name": "nvidia-nemotron"
+    },
+    {
+      "api_base": "https://openrouter.ai/api/v1",
+      "api_key": "${PICOCLAW_OPENROUTER_API_KEY}",
+      "model": "openrouter/liquid/lfm-2.5-1.2b-thinking:free",
+      "model_name": "liquid-thinking"
+    }
+  ],
+  "providers": {
+    "_comment": "DEPRECATED: Use model_list instead. This will be removed in a future version",
+    "anthropic": {
+      "api_base": "",
+      "api_key": ""
+    },
+    "cerebras": {
+      "api_base": "",
+      "api_key": ""
+    },
+    "gemini": {
+      "api_base": "",
+      "api_key": ""
+    },
+    "groq": {
+      "api_base": "",
+      "api_key": "gsk_xxx"
+    },
+    "mistral": {
+      "api_base": "https://api.mistral.ai/v1",
+      "api_key": ""
+    },
+    "moonshot": {
+      "api_base": "",
+      "api_key": "sk-xxx"
+    },
+    "nvidia": {
+      "api_base": "",
+      "api_key": "nvapi-xxx",
+      "proxy": "http://127.0.0.1:7890"
+    },
+    "ollama": {
+      "api_base": "http://localhost:11434/v1",
+      "api_key": ""
+    },
+    "openai": {
+      "api_base": "",
+      "api_key": "",
+      "web_search": true
+    },
+    "openrouter": {
+      "api_base": "",
+      "api_key": "${PICOCLAW_OPENROUTER_API_KEY}"
+    },
+    "qwen": {
+      "api_base": "",
+      "api_key": "sk-xxx"
+    },
+    "vllm": {
+      "api_base": "",
+      "api_key": ""
+    },
+    "volcengine": {
+      "api_base": "",
+      "api_key": ""
+    },
+    "zhipu": {
+      "api_base": "",
+      "api_key": "YOUR_ZHIPU_API_KEY"
+    }
+  },
+  "tools": {
+    "cron": {
+      "exec_timeout_minutes": 5
+    },
+    "exec": {
+      "custom_deny_patterns": [],
+      "enable_deny_patterns": false
+    },
+    "skills": {
+      "registries": {
+        "clawhub": {
+          "base_url": "https://clawhub.ai",
+          "download_path": "/api/v1/download",
+          "enabled": true,
+          "search_path": "/api/v1/search",
+          "skills_path": "/api/v1/skills"
+        }
+      }
+    },
+    "web": {
+      "brave": {
+        "api_key": "YOUR_BRAVE_API_KEY",
+        "enabled": false,
+        "max_results": 5
+      },
+      "duckduckgo": {
+        "enabled": false,
+        "max_results": 5
+      },
+      "perplexity": {
+        "api_key": "pplx-xxx",
+        "enabled": false,
+        "max_results": 5
+      },
+      "proxy": "",
+      "fetch_blocklist": [
+        "query1.finance.yahoo.com",
+        "query2.finance.yahoo.com"
+      ]
+    }
+  }
+}
