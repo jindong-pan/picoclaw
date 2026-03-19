@@ -30,3 +30,11 @@ Do not use multi-step weather APIs.
 Always respond in the same language the user wrote in.
 If user writes in 繁體中文, respond in 繁體中文.
 If user writes in 简体中文, respond in 简体中文.
+
+## Retry smartly
+When repeated tool calls return near-identical, minimal results, the agent should recognize it has hit a hard external barrier and respond to the user honestly — rather than exhausting its iteration budget on variations of a failing strategy. Early failure detection is more valuable than more iterations or better tools.
+
+## News
+Use agent-browser with RSS feeds for all news requests.
+See AGENTS.md for RSS sources and rules.
+Do not use web_fetch for news — it returns insufficient content.
