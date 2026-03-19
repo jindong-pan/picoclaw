@@ -6,6 +6,8 @@ import (
 	"os"
 	"sync/atomic"
 
+	"github.com/joho/godotenv"
+
 	"github.com/caarlos0/env/v11"
 
 	"github.com/jindong-pan/picoclaw/pkg/fileutil"
@@ -569,8 +571,8 @@ type WebToolsConfig struct {
 	GLMSearch  GLMSearchConfig  `json:"glm_search"`
 	// Proxy is an optional proxy URL for web tools (http/https/socks5/socks5h).
 	// For authenticated proxies, prefer HTTP_PROXY/HTTPS_PROXY env vars instead of embedding credentials in config.
-	Proxy           string `json:"proxy,omitempty"             env:"PICOCLAW_TOOLS_WEB_PROXY"`
-	FetchLimitBytes  int64    `json:"fetch_limit_bytes,omitempty"  env:"PICOCLAW_TOOLS_WEB_FETCH_LIMIT_BYTES"`
+	Proxy           string   `json:"proxy,omitempty"             env:"PICOCLAW_TOOLS_WEB_PROXY"`
+	FetchLimitBytes int64    `json:"fetch_limit_bytes,omitempty"  env:"PICOCLAW_TOOLS_WEB_FETCH_LIMIT_BYTES"`
 	FetchBlocklist  []string `json:"fetch_blocklist,omitempty"     env:"PICOCLAW_TOOLS_WEB_FETCH_BLOCKLIST"`
 }
 
@@ -656,9 +658,16 @@ type MCPConfig struct {
 	Servers map[string]MCPServerConfig `json:"servers,omitempty"`
 }
 
+// 1. Add "github.com/joho/godotenv" to the import block
+// 2. Add the expandEnvInModelList helper below LoadConfig
 func LoadConfig(path string) (*Config, error) {
 	cfg := DefaultConfig()
 
+	// ── Step 1: Load .env ──────────────────────────────────────────────────
+	// Must happen first so env.Parse() and os.ExpandEnv() both see the vars.
+	loadDotEnv(path)
+
+	// ── Step 2: Read config file ───────────────────────────────────────────
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -666,6 +675,12 @@ func LoadConfig(path string) (*Config, error) {
 		}
 		return nil, err
 	}
+
+	// ── Step 3: Expand ${VAR} placeholders in the raw JSON ─────────────────
+	// This handles model_list[].api_key and any other plain string fields
+	// that have no env: struct tag but use ${VAR} syntax in the JSON value.
+	expanded := os.ExpandEnv(string(data))
+	data = []byte(expanded)
 
 	// Pre-scan the JSON to check how many model_list entries the user provided.
 	// Go's JSON decoder reuses existing slice backing-array elements rather than
@@ -685,6 +700,9 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
+	// ── Step 4: Apply PICOCLAW_* environment variables ─────────────────────
+	// This handles all fields with env:"PICOCLAW_..." struct tags.
+	// Runs after JSON so env vars override config file values.
 	if err := env.Parse(cfg); err != nil {
 		return nil, err
 	}
