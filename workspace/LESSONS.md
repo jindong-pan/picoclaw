@@ -1,12 +1,9 @@
-- oil price queries: Sites like oilprice.com/oil-price-charts and investing.com return paywalled or JS-rendered pages with no price data. Use wttr.in style approach — fetch https://query1.finance.yahoo.com/v8/finance/chart/CL=F?interval=1d&range=1d for WTI crude price directly as JSON.
-
-- oil price repeat: If Yahoo Finance CL=F returns truncated JSON (200 chars not enough), retry with maxChars=1000 — the price data is deeper in the JSON response.
-
 ## Web fetch — blocked domains
-These domains are blocked and will always fail. Never attempt them:
 - query1.finance.yahoo.com
-- query2.finance.yahoo.com  
+- query2.finance.yahoo.com
 - api.coindesk.com
+- quote.cnbc.com
+- api.investing.com
 
 ## Price data — preferred sources (use directly, skip trial and error)
 
@@ -16,15 +13,14 @@ These domains are blocked and will always fail. Never attempt them:
 | Gold futures | https://stooq.com/q/l/?s=gc.f&f=sd2t2ohlcv&h&e=csv |
 | Silver futures | https://stooq.com/q/l/?s=si.f&f=sd2t2ohlcv&h&e=csv |
 | Oil (WTI) | https://stooq.com/q/l/?s=cl.f&f=sd2t2ohlcv&h&e=csv |
-| Weather | https://wttr.in/CITY?format=3 |
 
 ## Stooq unit warning
 Silver (SI.F) and gold (GC.F) prices from Stooq are in **cents per ounce**.
 Always divide by 100 to get USD/oz before reporting to the user.
 
-## Weather queries
-Always use https://wttr.in/CITY?format=3 directly — one fetch, one answer.
-Do not use multi-step weather APIs.
+## Weather
+Always use https://wttr.in/CITY?format=j1 for weather queries.
+Never fetch plain wttr.in/CITY without a format parameter.
 
 ## Response language
 Always respond in the same language the user wrote in.
@@ -35,6 +31,13 @@ If user writes in 简体中文, respond in 简体中文.
 When repeated tool calls return near-identical, minimal results, the agent should recognize it has hit a hard external barrier and respond to the user honestly — rather than exhausting its iteration budget on variations of a failing strategy. Early failure detection is more valuable than more iterations or better tools.
 
 ## News
-Use agent-browser with RSS feeds for all news requests.
+Use RSS feeds for all news requests — never fetch homepages.
 See AGENTS.md for RSS sources and rules.
-Do not use web_fetch for news — it returns insufficient content.
+web_fetch with maxChars=5000 is sufficient for RSS feeds.
+
+## US Treasury Yield
+Use FRED public CSV — no API key needed:
+US 10-Year Treasury Yield: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10
+Fetch with maxChars=500, the last line contains the most recent yield.
+Format: observation_date,DGS10
+Do NOT use: Treasury.gov, CNBC, Yahoo Finance, Bloomberg, Investing.com — all blocked.
