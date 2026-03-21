@@ -4,9 +4,25 @@
 - api.coindesk.com
 - quote.cnbc.com
 - api.investing.com
+- www.treasury.gov (JavaScript-rendered, yields not accessible)
+
+## US Treasury Yields
+Use FRED public CSV via exec/curl — web_fetch fails with HTTP/2 error on FRED.
+Always use exec, never web_fetch for FRED URLs.
+
+Use DGS series (daily data), NOT TB series (monthly):
+| Series | Maturity |
+|---|---|
+| DGS3MO | 3-month |
+| DGS1   | 1-year  |
+| DGS2   | 2-year  |
+| DGS10  | 10-year |
+
+Command:
+exec: curl -s "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS1" | tail -1
+Returns: YYYY-MM-DD,rate
 
 ## Price data — preferred sources (use directly, skip trial and error)
-
 | Asset | URL |
 |---|---|
 | Crypto (ETH, BTC etc) | https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd |
@@ -35,9 +51,4 @@ Use RSS feeds for all news requests — never fetch homepages.
 See AGENTS.md for RSS sources and rules.
 web_fetch with maxChars=5000 is sufficient for RSS feeds.
 
-## US Treasury Yield
-Use FRED public CSV — no API key needed:
-US 10-Year Treasury Yield: https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10
-Fetch with maxChars=500, the last line contains the most recent yield.
-Format: observation_date,DGS10
-Do NOT use: Treasury.gov, CNBC, Yahoo Finance, Bloomberg, Investing.com — all blocked.
+
